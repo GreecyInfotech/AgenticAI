@@ -1,0 +1,3 @@
+id: sales-agent
+module: agents.sales_agent
+description: Lead qualification, pipeline insights, and proposal support.

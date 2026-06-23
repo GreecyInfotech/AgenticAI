@@ -1,0 +1,3 @@
+id: architecture-agent
+module: agents.architecture_agent
+description: System design review, ADR lookup, and GitHub code analysis.

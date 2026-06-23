@@ -1,0 +1,13 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - deployment/cloudrun/Dockerfile
+      - --build-arg
+      - SERVICE_MODULE=api-gateway.main:app
+      - -t
+      - gcr.io/$PROJECT_ID/eaap-api-gateway
+      - .
+images:
+  - gcr.io/$PROJECT_ID/eaap-api-gateway

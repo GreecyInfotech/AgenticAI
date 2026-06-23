@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "github-mcp": { "command": "mcp-github", "env": { "GITHUB_TOKEN": "${GITHUB_TOKEN}" } },
+    "jira-mcp": { "command": "mcp-jira", "env": { "JIRA_URL": "${JIRA_URL}", "JIRA_API_TOKEN": "${JIRA_API_TOKEN}" } },
+    "postgres-mcp": { "command": "mcp-postgres", "env": { "DATABASE_URL": "${DATABASE_URL}" } },
+    "kafka-mcp": { "command": "mcp-kafka", "env": { "KAFKA_BOOTSTRAP_SERVERS": "${KAFKA_BOOTSTRAP_SERVERS}" } },
+    "filesystem-mcp": { "command": "mcp-filesystem", "env": { "FILESYSTEM_MCP_ROOT": "${FILESYSTEM_MCP_ROOT}" } }
+  }
+}

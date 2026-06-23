@@ -1,0 +1,3 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, sans-serif; background: #faf5ff; color: #1e1b4b; }
+button { cursor: pointer; }

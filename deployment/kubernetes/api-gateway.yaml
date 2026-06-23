@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eaap-api-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: eaap-api-gateway
+  template:
+    metadata:
+      labels:
+        app: eaap-api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: eaap/api-gateway:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: AGENT_GATEWAY_URL
+              value: http://eaap-agent-gateway:8001
+            - name: RAG_SERVICE_URL
+              value: http://eaap-rag:8002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eaap-api-gateway
+spec:
+  selector:
+    app: eaap-api-gateway
+  ports:
+    - port: 8000
+      targetPort: 8000

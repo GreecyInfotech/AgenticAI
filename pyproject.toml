@@ -1,0 +1,51 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "enterprise-agentic-ai-platform"
+version = "1.0.0"
+description = "Enterprise agentic AI platform with B2B/B2C portals, agent gateway, and MCP servers"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "httpx>=0.27.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "python-dotenv>=1.0.0",
+    "structlog>=24.4.0",
+    "tenacity>=9.0.0",
+    "sqlalchemy>=2.0.36",
+    "psycopg2-binary>=2.9.10",
+    "chromadb>=0.5.0",
+    "mcp>=1.0.0",
+    "atlassian-python-api>=3.41.0",
+    "PyGithub>=2.5.0",
+    "aiokafka>=0.12.0",
+    "opentelemetry-api>=1.29.0",
+    "opentelemetry-sdk>=1.29.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.29.0",
+    "opentelemetry-instrumentation-fastapi>=0.50b0",
+    "prometheus-client>=0.21.0",
+    "pyyaml>=6.0.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3.0", "pytest-asyncio>=0.24.0", "ruff>=0.8.0"]
+
+[project.scripts]
+mcp-github = "mcp_servers.github_mcp.server:main"
+mcp-jira = "mcp_servers.jira_mcp.server:main"
+mcp-postgres = "mcp_servers.postgres_mcp.server:main"
+mcp-kafka = "mcp_servers.kafka_mcp.server:main"
+mcp-filesystem = "mcp_servers.filesystem_mcp.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["eaap_platform", "agents", "mcp_servers", "rag", "vector_store", "kafka", "postgres"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["."]

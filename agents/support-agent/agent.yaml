@@ -1,0 +1,3 @@
+id: support-agent
+module: agents.support_agent
+description: Customer support triage, knowledge lookup, and ticket routing.

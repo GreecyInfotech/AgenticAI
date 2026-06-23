@@ -1,0 +1,3 @@
+id: order-agent
+module: agents.order_agent
+description: Order status, fulfillment tracking, and order event publishing.

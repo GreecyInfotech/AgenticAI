@@ -1,0 +1,3 @@
+id: backlog-agent
+module: agents.backlog_agent
+description: Sprint planning, backlog prioritization, and Jira management.

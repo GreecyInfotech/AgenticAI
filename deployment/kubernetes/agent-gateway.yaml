@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eaap-agent-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: eaap-agent-gateway
+  template:
+    metadata:
+      labels:
+        app: eaap-agent-gateway
+    spec:
+      containers:
+        - name: agent-gateway
+          image: eaap/agent-gateway:latest
+          ports:
+            - containerPort: 8001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eaap-agent-gateway
+spec:
+  selector:
+    app: eaap-agent-gateway
+  ports:
+    - port: 8001
+      targetPort: 8001
