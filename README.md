@@ -1,6 +1,6 @@
-# Enterprise Agentic AI Platform (EAAP)
+# AgenticAI — Enterprise Agentic AI Platform (EAAP)
 
-Agentic enterprise platform with **B2B** and **B2C** portals, dual gateways, specialized agents, MCP servers, RAG, Kafka events, and full observability stack.
+Multi-agent design and development platform with **B2B** and **B2C** portals, dual gateways, specialized agents, MCP servers, RAG, Kafka events, and full observability stack.
 
 ## Architecture
 
