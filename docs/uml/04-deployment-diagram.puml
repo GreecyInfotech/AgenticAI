@@ -1,0 +1,91 @@
+@startuml 04-deployment-diagram
+title Smart Port AI Platform — Deployment Diagram (Production / GKE)
+
+node "User Devices" {
+  artifact "Browser / Mobile" as browser
+}
+
+cloud "Google Cloud Platform" {
+  node "GKE Cluster (smart-port)" {
+    node "Ingress (nginx)" as ingress {
+      component "api.smartport.io" as api_ingress
+      component "agents.smartport.io" as agent_ingress
+    }
+
+    node "Namespace: smart-port" {
+      node "Gateway Pods (HPA 2-10)" as gw_pods {
+        [api-gateway x3] as api_pod
+        [agent-gateway x2] as agent_pod
+      }
+
+      node "Agent Pods (HPA per domain)" as agent_pods {
+        [vessel-agent x2]
+        [container-agent x2]
+        [customs-agent x2]
+        [billing-agent x2]
+        [+ 7 more agents]
+      }
+
+      node "RAG + ML Pods" as ml_pods {
+        [vector-search]
+        [embedding-service]
+        [vessel-delay-prediction]
+        [congestion-prediction]
+      }
+
+      node "Frontend Pods" as fe_pods {
+        [port-operations-ui]
+        [executive-dashboard]
+        [customs-dashboard]
+      }
+
+      node "Observability" as obs_pods {
+        [prometheus]
+        [grafana]
+        [otel-collector]
+      }
+    }
+  }
+
+  node "Cloud SQL" as cloudsql {
+    database "PostgreSQL 16\n+ pgvector" as pg
+  }
+
+  node "Memorystore" as memorystore {
+    database "Redis HA" as redis
+  }
+
+  node "Cloud Storage" as gcs {
+        storage "Documents\nML Models\nBackups" as buckets
+  }
+
+  node "BigQuery" as bq {
+        database "smart_port_analytics" as analytics
+  }
+
+  node "Confluent / Kafka" as kafka_cluster {
+        queue "Kafka Cluster\n(3 brokers)" as kafka
+        [Schema Registry] as schema_reg
+  }
+}
+
+browser --> ingress : HTTPS
+api_ingress --> api_pod
+agent_ingress --> agent_pod
+api_pod --> pg : private VPC
+api_pod --> redis
+agent_pod --> agent_pods : cluster DNS
+agent_pods --> kafka : events
+agent_pods --> pg
+ml_pods --> pg
+rag_pods --> buckets : GCS
+kafka --> analytics : Kafka Connect / ETL
+obs_pods --> api_pod : scrape
+obs_pods --> agent_pods : OTLP
+
+note right of gw_pods
+  Helm chart: deployment/helm/smart-port/
+  Terraform: deployment/terraform/
+end note
+
+@enduml

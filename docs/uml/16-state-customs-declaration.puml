@@ -1,0 +1,31 @@
+@startuml 16-state-customs-declaration
+title State Machine — Customs Declaration Lifecycle
+
+[*] --> Pending : declaration submitted
+
+Pending --> InReview : assigned to officer\nor auto-flagged (risk)
+
+InReview --> Cleared : officer approves\nor auto-clearance
+InReview --> Held : missing documents\nor inspection required
+InReview --> Rejected : compliance failure
+
+Held --> InReview : documents received
+Held --> Rejected : deadline exceeded
+
+Cleared --> [*]
+Rejected --> [*]
+
+note right of Pending
+  Kafka: customs.declarations
+  Agent: customs-agent
+  MCP: customs-mcp
+end note
+
+note bottom of InReview
+  Risk score thresholds:
+  < 0.3  → auto-clear eligible
+  0.3-0.7 → manual review
+  > 0.7  → hold + inspect
+end note
+
+@enduml

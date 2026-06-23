@@ -1,0 +1,134 @@
+@startuml 06-domain-class-diagram
+title Smart Port AI Platform — Domain Class Diagram
+
+class Vessel {
+  +id: UUID
+  +imo: String
+  +name: String
+  +flag: String
+  +teuCapacity: Integer
+  +status: VesselStatus
+  +createdAt: DateTime
+  +updatedAt: DateTime
+}
+
+class Berth {
+  +id: UUID
+  +code: String
+  +maxLengthM: Decimal
+  +maxDraftM: Decimal
+  +status: BerthStatus
+}
+
+class VesselCall {
+  +id: UUID
+  +eta: DateTime
+  +etd: DateTime
+  +ata: DateTime
+  +atd: DateTime
+  +status: CallStatus
+}
+
+class Container {
+  +id: UUID
+  +containerNumber: String
+  +type: ContainerType
+  +status: ContainerStatus
+  +yardLocation: String
+  +weightKg: Decimal
+}
+
+class CustomsDeclaration {
+  +id: UUID
+  +declarationNumber: String
+  +status: DeclarationStatus
+  +riskScore: Decimal
+  +submittedAt: DateTime
+  +clearedAt: DateTime
+}
+
+class Invoice {
+  +id: UUID
+  +invoiceNumber: String
+  +customerName: String
+  +amount: Decimal
+  +currency: String
+  +status: InvoiceStatus
+  +dueDate: Date
+}
+
+class Document {
+  +id: UUID
+  +title: String
+  +source: String
+  +contentType: String
+  +storagePath: String
+  +metadata: JSON
+}
+
+class DocumentChunk {
+  +id: UUID
+  +chunkIndex: Integer
+  +content: Text
+  +embedding: Vector[1536]
+  +metadata: JSON
+}
+
+class AuditLog {
+  +id: UUID
+  +userId: String
+  +action: String
+  +resourceType: String
+  +resourceId: String
+  +details: JSON
+  +ipAddress: String
+  +createdAt: DateTime
+}
+
+class AgentRequest {
+  +query: String
+  +context: Map
+  +sessionId: String
+}
+
+class AgentResponse {
+  +answer: String
+  +toolsUsed: List<String>
+  +confidence: Float
+  +sessionId: String
+  +metadata: Map
+}
+
+class PredictionRequest {
+  +features: Map<String, Float>
+}
+
+class PredictionResponse {
+  +prediction: Float
+  +confidence: Float
+  +modelVersion: String
+  +featuresUsed: List<String>
+}
+
+enum VesselStatus { SCHEDULED; APPROACHING; BERTHED; DEPARTED }
+enum CallStatus { SCHEDULED; BERTHED; DEPARTED; CANCELLED }
+enum ContainerStatus { AVAILABLE; IN_TRANSIT; HELD; CUSTOMS_HOLD }
+enum DeclarationStatus { PENDING; IN_REVIEW; CLEARED; HELD; REJECTED }
+enum InvoiceStatus { DRAFT; PENDING; PAID; OVERDUE }
+
+Vessel "1" -- "0..*" VesselCall : has >
+Berth "1" -- "0..*" VesselCall : hosts >
+VesselCall "1" -- "0..*" Container : carries >
+VesselCall "1" -- "0..*" CustomsDeclaration : requires >
+Document "1" -- "1..*" DocumentChunk : contains >
+AgentRequest ..> AgentResponse : produces >
+PredictionRequest ..> PredictionResponse : produces >
+
+note bottom of VesselCall
+  Kafka events:
+  vessel.arrivals
+  vessel.departures
+  berth.allocations
+end note
+
+@enduml

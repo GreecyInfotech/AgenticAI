@@ -1,0 +1,55 @@
+@startuml 12-sequence-event-flow
+title Event-Driven Flow — Kafka Publish & Consume
+
+participant "Vessel Agent" as Agent
+participant "MCP / TOS" as TOS
+queue "Kafka\nvessel.arrivals" as TopicArrival
+queue "Kafka\nberth.allocations" as TopicBerth
+participant "Kafka Streams\nProcessor" as Streams
+participant "Container Agent" as ContainerAgent
+participant "Planning Agent" as PlanningAgent
+queue "Kafka\ncontainer.moves" as TopicMove
+database "PostgreSQL" as DB
+queue "Kafka\nDLQ" as DLQ
+database "BigQuery\n(analytics)" as BQ
+
+== Vessel Arrival Event ==
+
+Agent -> TOS : get_vessel_schedule()
+TOS --> Agent : vessel data
+Agent -> TopicArrival : publish VesselArrivalEvent\n{event_id, vessel_id, eta, teu_count}
+
+TopicArrival -> Streams : consume
+Streams -> Streams : VesselArrivalProcessor\n.calculate_priority()
+Streams -> TopicBerth : publish berth.allocation.requested
+
+TopicBerth -> PlanningAgent : consume
+PlanningAgent -> PlanningAgent : optimize berth plan
+PlanningAgent -> DB : UPDATE vessel_calls SET berth_id
+
+== Container Move Event ==
+
+ContainerAgent -> TopicMove : publish container.move\n{container_id, from, to}
+TopicMove -> Streams : ContainerMoveAggregator
+Streams -> DB : update yard.status
+
+== Dead Letter Queue ==
+
+TopicArrival -> DLQ : failed message\n(after retries)
+DLQ -> Streams : DLQ consumer reprocess
+alt max retries exceeded
+  Streams -> DLQ : log & alert
+else retry success
+  Streams -> TopicArrival : republish
+end
+
+TopicArrival -> BQ : Kafka Connect sink\n(analytics pipeline)
+
+note over TopicArrival
+  Event schemas in:
+  event-platform/event-schemas/
+  Topics config in:
+  event-platform/kafka-topics/topics.yaml
+end note
+
+@enduml

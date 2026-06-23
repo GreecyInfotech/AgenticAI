@@ -1,0 +1,34 @@
+{
+  "dashboard": {
+    "title": "Smart Port Operations",
+    "uid": "smart-port-ops",
+    "tags": ["smart-port", "operations"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "title": "Vessel Calls (MTD)",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+        "targets": [{ "expr": "vessel_calls_mtd", "legendFormat": "Calls" }]
+      },
+      {
+        "title": "Yard Utilization",
+        "type": "gauge",
+        "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+        "targets": [{ "expr": "yard_utilization_ratio * 100", "legendFormat": "%" }]
+      },
+      {
+        "title": "Agent Invocations",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+        "targets": [{ "expr": "rate(agent_invocations_total[5m])", "legendFormat": "{{agent}}" }]
+      },
+      {
+        "title": "API Gateway Latency (p95)",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+        "targets": [{ "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))", "legendFormat": "p95" }]
+      }
+    ]
+  }
+}

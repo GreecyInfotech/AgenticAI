@@ -1,0 +1,19 @@
+[project]
+name = "metadata-extraction"
+version = "1.0.0"
+description = "Document metadata and entity extraction"
+requires-python = ">=3.11"
+dependencies = [
+    "smart-port-common",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "httpx>=0.27",
+    "pydantic>=2.0",
+]
+
+[tool.uv.sources]
+smart-port-common = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

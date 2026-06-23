@@ -1,0 +1,92 @@
+@startuml 05-use-case-diagram
+left to right direction
+title Smart Port AI Platform — Use Case Diagram
+
+actor "Port Operator" as Operator
+actor "Customs Officer" as Customs
+actor "Executive" as Executive
+actor "Maintenance\nEngineer" as Maintenance
+actor "Platform Admin" as Admin
+actor "External System" as External
+
+rectangle "Smart Port AI Platform" {
+
+  package "Operations" {
+    usecase "View Vessel Schedule" as UC1
+    usecase "Monitor Yard Utilization" as UC2
+    usecase "Manage Container Moves" as UC3
+    usecase "Allocate Berth" as UC4
+  }
+
+  package "Customs & Compliance" {
+    usecase "Review Declarations" as UC5
+    usecase "Approve Clearance" as UC6
+    usecase "Assess Risk Score" as UC7
+  }
+
+  package "AI & Analytics" {
+    usecase "Invoke AI Agent" as UC8
+    usecase "Run Multi-Agent Workflow" as UC9
+    usecase "Search Knowledge Base" as UC10
+    usecase "Run ML Prediction" as UC11
+    usecase "View Executive KPIs" as UC12
+  }
+
+  package "Billing & Revenue" {
+    usecase "View Invoices" as UC13
+    usecase "Generate Invoice" as UC14
+    usecase "Forecast Revenue" as UC15
+  }
+
+  package "Safety & Maintenance" {
+    usecase "Schedule Maintenance" as UC16
+    usecase "Predict Equipment Failure" as UC17
+    usecase "Triage Incidents" as UC18
+  }
+
+  package "Administration" {
+    usecase "Manage Users & Roles" as UC19
+    usecase "Configure Integrations" as UC20
+    usecase "View Audit Logs" as UC21
+    usecase "Monitor Platform Health" as UC22
+  }
+}
+
+Operator --> UC1
+Operator --> UC2
+Operator --> UC3
+Operator --> UC4
+Operator --> UC8
+Operator --> UC11
+
+Customs --> UC5
+Customs --> UC6
+Customs --> UC7
+Customs --> UC8
+
+Executive --> UC12
+Executive --> UC13
+Executive --> UC15
+Executive --> UC8
+Executive --> UC9
+
+Maintenance --> UC16
+Maintenance --> UC17
+Maintenance --> UC18
+Maintenance --> UC11
+
+Admin --> UC19
+Admin --> UC20
+Admin --> UC21
+Admin --> UC22
+Admin --> UC8
+
+External --> UC20 : MCP / API
+
+UC4 ..> UC8 : <<include>>
+UC6 ..> UC7 : <<include>>
+UC9 ..> UC8 : <<extend>>
+UC10 ..> UC8 : <<include>>
+UC14 ..> UC8 : <<include>>
+
+@enduml

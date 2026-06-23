@@ -1,0 +1,109 @@
+global:
+  environment: production
+  imageRegistry: ""
+  imagePullPolicy: IfNotPresent
+
+apiGateway:
+  enabled: true
+  replicaCount: 3
+  image:
+    repository: smart-port/api-gateway
+    tag: latest
+  service:
+    type: LoadBalancer
+    port: 8080
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+agentGateway:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: smart-port/agent-gateway
+    tag: latest
+  service:
+    port: 8081
+
+agents:
+  enabled: true
+  replicaCount: 2
+  list:
+    - name: vessel-agent
+      port: 8100
+    - name: container-agent
+      port: 8101
+    - name: customs-agent
+      port: 8102
+    - name: billing-agent
+      port: 8103
+    - name: maintenance-agent
+      port: 8104
+    - name: incident-agent
+      port: 8105
+    - name: planning-agent
+      port: 8106
+    - name: safety-agent
+      port: 8107
+    - name: weather-agent
+      port: 8108
+    - name: logistics-agent
+      port: 8109
+    - name: executive-agent
+      port: 8110
+
+rag:
+  enabled: true
+  services:
+    - name: vector-search
+      port: 8203
+    - name: embedding-service
+      port: 8202
+
+ml:
+  enabled: true
+  services:
+    - name: vessel-delay-prediction
+      port: 8300
+    - name: congestion-prediction
+      port: 8304
+
+postgres:
+  enabled: true
+  auth:
+    username: smartport
+    database: smartport
+  primary:
+    persistence:
+      size: 50Gi
+
+redis:
+  enabled: true
+  architecture: standalone
+
+kafka:
+  enabled: true
+  replicaCount: 3
+
+monitoring:
+  prometheus:
+    enabled: true
+  grafana:
+    enabled: true
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: api.smartport.io
+      paths:
+        - path: /
+          service: api-gateway
+    - host: agents.smartport.io
+      paths:
+        - path: /
+          service: agent-gateway

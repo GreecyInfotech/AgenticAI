@@ -1,0 +1,21 @@
+# pgvector configuration and tuning
+
+extension: vector
+default_dimensions: 1536  # OpenAI text-embedding-3-small
+
+indexes:
+  document_chunks:
+    type: ivfflat
+    lists: 100
+    ops: vector_cosine_ops
+
+  similarity_threshold: 0.7
+  max_results: 20
+
+embedding_models:
+  - name: text-embedding-3-small
+    dimensions: 1536
+    provider: openai
+  - name: text-embedding-3-large
+    dimensions: 3072
+    provider: openai

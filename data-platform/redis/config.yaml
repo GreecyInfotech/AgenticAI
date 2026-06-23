@@ -1,0 +1,15 @@
+# Redis configuration for Smart Port AI Platform
+
+maxmemory: 512mb
+maxmemory-policy: allkeys-lru
+
+# Session cache TTL: 24 hours
+# Agent response cache TTL: 1 hour
+# Rate limiting window: 60 seconds
+
+cache_keys:
+  agent_response: "cache:agent:{agent}:{hash}"
+  session: "session:{session_id}"
+  vessel_schedule: "vessel:schedule"
+  yard_status: "yard:status"
+  rate_limit: "ratelimit:{user_id}:{endpoint}"

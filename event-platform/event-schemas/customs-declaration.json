@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CustomsDeclarationEvent",
+  "type": "object",
+  "required": ["event_id", "event_type", "timestamp", "declaration_id", "status"],
+  "properties": {
+    "event_id": { "type": "string", "format": "uuid" },
+    "event_type": { "type": "string", "const": "customs.declaration" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "declaration_id": { "type": "string" },
+    "vessel_id": { "type": "string" },
+    "status": { "type": "string", "enum": ["submitted", "in_review", "cleared", "held", "rejected"] },
+    "risk_score": { "type": "number", "minimum": 0, "maximum": 1 }
+  }
+}

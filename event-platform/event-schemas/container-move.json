@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ContainerMoveEvent",
+  "type": "object",
+  "required": ["event_id", "event_type", "timestamp", "container_id"],
+  "properties": {
+    "event_id": { "type": "string", "format": "uuid" },
+    "event_type": { "type": "string", "const": "container.move" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "container_id": { "type": "string" },
+    "from_location": { "type": "string" },
+    "to_location": { "type": "string" },
+    "move_type": { "type": "string", "enum": ["load", "discharge", "relocate", "gate_in", "gate_out"] },
+    "equipment_id": { "type": "string" }
+  }
+}

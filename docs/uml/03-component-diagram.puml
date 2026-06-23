@@ -1,0 +1,88 @@
+@startuml 03-component-diagram
+title Smart Port AI Platform — Component Diagram (Gateways & Agents)
+
+package "Frontend Layer" {
+  [Port Operations UI] as PortUI
+  [Executive Dashboard] as ExecUI
+  [Customs Dashboard] as CustomsUI
+  [Mobile App] as MobileUI
+  [Auth Hook / API Client] as FEClient
+}
+
+package "API Gateway (NestJS)" {
+  [Auth Module] as AuthMod
+  [JWT Strategy] as JWT
+  [Vessels Controller] as VesselsCtrl
+  [Containers Controller] as ContainersCtrl
+  [Customs Controller] as CustomsCtrl
+  [Billing Controller] as BillingCtrl
+  [Analytics Controller] as AnalyticsCtrl
+  [Proxy Service] as ProxySvc
+  [Health Controller] as HealthAPI
+  [Throttler] as Throttle
+}
+
+package "Agent Gateway (NestJS)" {
+  [Agent Router Service] as AgentRouter
+  [Agents Controller] as AgentsCtrl
+  [Orchestration Service] as Orchestrator
+  [Orchestration Controller] as OrchCtrl
+  [JWT Strategy] as JWTAgent
+}
+
+package "AI Agent (Python/FastAPI)" {
+  [FastAPI App] as AgentApp
+  [LangGraph Agent] as LangGraph
+  [Domain Tools] as Tools
+  [Agent Config] as AgentCfg
+  [Health Router] as HealthAgent
+  [Telemetry] as OTEL
+}
+
+package "Shared Libraries" {
+  [smart-port-types] as TSTypes
+  [smart_port_common] as PyCommon
+}
+
+package "MCP Servers" {
+  [TOS MCP] as TOSMCP
+  [SAP MCP] as SAPMCP
+  [Postgres MCP] as PGMCP
+  [Kafka MCP] as KafkaMCP
+  [Customs MCP] as CustomsMCP
+}
+
+PortUI --> FEClient
+ExecUI --> FEClient
+CustomsUI --> FEClient
+MobileUI --> FEClient
+
+FEClient --> AuthMod : POST /auth/login
+FEClient --> VesselsCtrl : GET /vessels
+FEClient --> ContainersCtrl : GET /containers
+FEClient --> CustomsCtrl : GET /customs
+FEClient --> AnalyticsCtrl : GET /analytics
+
+AuthMod --> JWT
+VesselsCtrl --> JWT : validate
+ProxySvc --> AgentRouter : route agents
+
+FEClient --> AgentsCtrl : POST /invoke
+AgentsCtrl --> AgentRouter
+OrchCtrl --> Orchestrator
+Orchestrator --> AgentRouter
+
+AgentRouter --> AgentApp : HTTP /invoke
+AgentApp --> LangGraph
+LangGraph --> Tools
+LangGraph --> PyCommon
+Tools --> TOSMCP : MCP
+Tools --> SAPMCP : MCP
+Tools --> PGMCP : MCP
+Tools --> CustomsMCP : MCP
+
+AuthMod ..> TSTypes
+AgentRouter ..> TSTypes
+AgentApp ..> PyCommon
+
+@enduml

@@ -1,0 +1,49 @@
+@startuml 07-sequence-authentication
+title Authentication Flow — JWT / SSO
+
+actor User
+participant "Frontend App" as UI
+participant "API Gateway" as API
+participant "Auth Service" as Auth
+participant "Identity Provider\n(Okta / Azure AD)" as IDP
+database "Redis\n(session cache)" as Redis
+
+== Local JWT Authentication ==
+
+User -> UI : Enter credentials
+UI -> API : POST /api/v1/auth/login\n{username, password}
+API -> Auth : validateCredentials()
+Auth -> Auth : lookup user & roles
+Auth -> Auth : sign JWT (HS256, 24h)
+Auth --> API : {access_token, user, expires_in}
+API --> UI : 200 OK + JWT
+UI -> UI : Store token in localStorage
+UI --> User : Redirect to Dashboard
+
+== Subsequent API Request ==
+
+User -> UI : View vessel schedule
+UI -> API : GET /api/v1/vessels\nAuthorization: Bearer <token>
+API -> Auth : JWT Strategy validate()
+Auth -> Auth : decode & verify signature
+Auth --> API : {userId, roles}
+API -> API : RBAC check (vessel:read)
+API --> UI : 200 {data: vessels[]}
+UI --> User : Display schedule
+
+== SSO Flow (Production) ==
+
+User -> UI : Click "Sign in with SSO"
+UI -> IDP : OAuth2 authorize redirect
+IDP --> User : Login prompt
+User -> IDP : Authenticate
+IDP --> UI : Authorization code
+UI -> API : POST /auth/callback {code}
+API -> IDP : Exchange code for tokens
+IDP --> API : ID token + claims
+API -> Auth : mapGroupsToRoles()
+Auth -> Redis : cache session
+API --> UI : Platform JWT
+UI --> User : Dashboard
+
+@enduml

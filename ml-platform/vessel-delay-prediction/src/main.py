@@ -1,0 +1,57 @@
+"""ML inference service: vessel-delay-prediction."""
+
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from pydantic import BaseModel, Field
+
+from smart_port_common import create_health_router, setup_logging, setup_telemetry
+from smart_port_common.auth import TokenPayload, verify_token
+from smart_port_common.logging import get_logger
+
+from .model import load_model, predict
+
+logger = get_logger(__name__)
+SERVICE_NAME = "vessel-delay-prediction"
+SERVICE_PORT = 8300
+
+
+class PredictionRequest(BaseModel):
+    vessel_type: float = 0.0
+    origin: float = 0.0
+    weather_score: float = 0.0
+    congestion_level: float = 0.0
+
+
+class PredictionResponse(BaseModel):
+    prediction: float
+    confidence: float
+    model_version: str = "1.0.0"
+    features_used: list[str] = Field(default_factory=lambda: ['vessel_type', 'origin', 'weather_score', 'congestion_level'])
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    setup_logging(SERVICE_NAME)
+    load_model()
+    logger.info("ml_service_started", model="vessel_delay")
+    yield
+
+
+app = FastAPI(title="vessel-delay-prediction", version="1.0.0", lifespan=lifespan)
+app.include_router(create_health_router(SERVICE_NAME))
+setup_telemetry(app, SERVICE_NAME)
+
+
+@app.post("/predict", response_model=PredictionResponse)
+async def predict_endpoint(
+    request: PredictionRequest, token: TokenPayload = verify_token
+) -> PredictionResponse:
+    features = request.model_dump()
+    result = predict(features)
+    return PredictionResponse(**result)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=SERVICE_PORT)

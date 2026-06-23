@@ -1,0 +1,31 @@
+@startuml 15-state-vessel-call
+title State Machine — Vessel Call Lifecycle
+
+[*] --> Scheduled : vessel call created
+
+Scheduled --> Approaching : AIS ETA within\n24h threshold
+Scheduled --> Cancelled : voyage cancelled
+
+Approaching --> Berthed : ATA recorded\nberth allocated
+Approaching --> Scheduled : ETA revised\n(outside window)
+
+Berthed --> Departed : ATD recorded\nall cargo handled
+Berthed --> Approaching : emergency departure\n(re-berthing)
+
+Departed --> [*]
+
+Cancelled --> [*]
+
+note right of Approaching
+  Kafka: vessel.arrivals
+  Agent: vessel-agent
+  ML: vessel-delay-prediction
+end note
+
+note right of Berthed
+  Kafka: berth.allocations
+  Agent: container-agent
+  MCP: tos-mcp
+end note
+
+@enduml

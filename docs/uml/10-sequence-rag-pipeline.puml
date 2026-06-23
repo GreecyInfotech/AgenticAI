@@ -1,0 +1,55 @@
+@startuml 10-sequence-rag-pipeline
+title RAG Pipeline — Document Ingestion & Retrieval
+
+actor User
+participant "Client / Agent" as Client
+participant "Document\nIngestion" as Ingest
+participant "Chunking\nService" as Chunk
+participant "Embedding\nService" as Embed
+participant "Metadata\nExtraction" as Meta
+participant "Knowledge\nManagement" as KM
+participant "Vector Search" as Search
+database "PostgreSQL\n(pgvector)" as PG
+database "Cloud Storage" as GCS
+participant "LLM Provider" as LLM
+
+== Ingestion Pipeline ==
+
+User -> Client : Upload port SOP document
+Client -> Ingest : POST /process\n{content, metadata}
+Ingest -> GCS : store raw document
+Ingest -> Chunk : POST /process\n{content, options}
+Chunk --> Ingest : {chunks[]}
+
+Ingest -> Meta : POST /process\n{content}
+Meta --> Ingest : {entities, metadata}
+
+loop For each chunk
+  Ingest -> Embed : POST /process\n{content}
+  Embed -> LLM : embeddings API
+  LLM --> Embed : vector[1536]
+  Embed --> Ingest : {embeddings}
+  Ingest -> PG : INSERT document_chunks\n(embedding, content)
+end
+
+Ingest -> KM : register document
+KM --> Client : {document_id, status: indexed}
+
+== Retrieval (at query time) ==
+
+User -> Client : "What are berth allocation rules?"
+Client -> Search : POST /process\n{content: query, top_k: 5}
+Search -> Embed : embed query
+Embed -> LLM : embedding API
+LLM --> Embed : query vector
+Search -> PG : cosine similarity search\n(IVFFlat index)
+PG --> Search : top-k chunks
+Search --> Client : {results[], scores[]}
+
+Client -> Client : Pass chunks to Agent as context
+note right of Search
+  similarity_threshold: 0.7
+  max_results: 20
+end note
+
+@enduml

@@ -1,0 +1,48 @@
+# Cloud Run service definitions for serverless deployment
+
+services:
+  api-gateway:
+    image: smart-port/api-gateway:latest
+    port: 8080
+    cpu: 1
+    memory: 512Mi
+    min_instances: 1
+    max_instances: 10
+    env:
+      - JWT_SECRET
+      - POSTGRES_HOST
+    vpc_connector: smart-port-vpc
+
+  agent-gateway:
+    image: smart-port/agent-gateway:latest
+    port: 8081
+    cpu: 2
+    memory: 1Gi
+    min_instances: 1
+    max_instances: 5
+    timeout: 300s
+
+  vessel-agent:
+    image: smart-port/vessel-agent:latest
+    port: 8100
+    cpu: 2
+    memory: 2Gi
+    min_instances: 0
+    max_instances: 5
+    timeout: 300s
+
+  vector-search:
+    image: smart-port/vector-search:latest
+    port: 8203
+    cpu: 1
+    memory: 1Gi
+    min_instances: 1
+    max_instances: 3
+
+  vessel-delay-prediction:
+    image: smart-port/vessel-delay-prediction:latest
+    port: 8300
+    cpu: 1
+    memory: 512Mi
+    min_instances: 0
+    max_instances: 5

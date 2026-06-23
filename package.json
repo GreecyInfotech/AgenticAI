@@ -1,0 +1,28 @@
+{
+  "name": "smart-port-ai-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Multi-agent Smart Port Digital Transformation Platform",
+  "workspaces": [
+    "frontend/*",
+    "api-gateway",
+    "agent-gateway",
+    "shared/typescript/*"
+  ],
+  "scripts": {
+    "build": "pnpm -r run build",
+    "dev:api-gateway": "pnpm --filter api-gateway dev",
+    "dev:agent-gateway": "pnpm --filter agent-gateway dev",
+    "dev:port-ops": "pnpm --filter port-operations-ui dev",
+    "dev:executive": "pnpm --filter executive-dashboard dev",
+    "dev:customs": "pnpm --filter customs-dashboard dev",
+    "dev:mobile": "pnpm --filter mobile-app dev",
+    "lint": "pnpm -r run lint",
+    "test": "pnpm -r run test"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}

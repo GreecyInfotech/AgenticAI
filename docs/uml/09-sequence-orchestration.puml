@@ -1,0 +1,37 @@
+@startuml 09-sequence-orchestration
+title Multi-Agent Orchestration Flow
+
+actor User
+participant "Client" as Client
+participant "Agent Gateway" as AGW
+participant "Orchestration\nService" as Orch
+participant "Vessel Agent" as Vessel
+participant "Weather Agent" as Weather
+participant "Customs Agent" as Customs
+participant "Executive Agent" as Exec
+
+User -> Client : "Prepare for MSC Aurora arrival:\nweather, berth, customs"
+Client -> AGW : POST /agents/v1/orchestrate\n{intent: "..."}
+
+AGW -> Orch : planMultiAgentWorkflow(intent)
+Orch -> Orch : Parse intent keywords\n(vessel, weather, customs, executive)
+Orch --> Orch : Plan:\n1. vessel\n2. weather\n3. customs\n4. executive (summarize)
+
+loop For each step in plan
+  AGW -> Vessel : invoke(query) <<first>>
+  Vessel --> AGW : berth & schedule answer
+
+  AGW -> Weather : invoke(query)
+  Weather --> AGW : forecast & impact
+
+  AGW -> Customs : invoke(query)
+  Customs --> AGW : declaration status
+
+  AGW -> Exec : invoke("Summarize: ...")
+  Exec --> AGW : executive briefing
+end
+
+AGW --> Client : {\n  workflow: {steps},\n  results: [...],\n  completed_at\n}
+Client --> User : Aggregated multi-domain response
+
+@enduml

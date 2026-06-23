@@ -1,0 +1,52 @@
+# Elasticsearch index mappings for Smart Port
+
+indices:
+  containers:
+    settings:
+      number_of_shards: 3
+      number_of_replicas: 1
+    mappings:
+      properties:
+        container_number: { type: keyword }
+        type: { type: keyword }
+        status: { type: keyword }
+        yard_location: { type: keyword }
+        vessel_id: { type: keyword }
+        weight_kg: { type: float }
+        updated_at: { type: date }
+
+  vessels:
+    settings:
+      number_of_shards: 2
+      number_of_replicas: 1
+    mappings:
+      properties:
+        imo: { type: keyword }
+        name: { type: text, fields: { keyword: { type: keyword } } }
+        status: { type: keyword }
+        eta: { type: date }
+        berth: { type: keyword }
+
+  audit_log:
+    settings:
+      number_of_shards: 2
+      number_of_replicas: 1
+    mappings:
+      properties:
+        user_id: { type: keyword }
+        action: { type: keyword }
+        resource_type: { type: keyword }
+        timestamp: { type: date }
+        details: { type: object, enabled: true }
+
+  documents:
+    settings:
+      number_of_shards: 3
+      number_of_replicas: 1
+    mappings:
+      properties:
+        title: { type: text }
+        content: { type: text }
+        source: { type: keyword }
+        metadata: { type: object, enabled: true }
+        created_at: { type: date }

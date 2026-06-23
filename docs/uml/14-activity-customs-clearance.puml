@@ -1,0 +1,47 @@
+@startuml 14-activity-customs-clearance
+title Activity Diagram — Customs Clearance Workflow
+
+|Shipping Agent / System|
+start
+:Submit customs declaration;
+
+|Customs Agent|
+:Validate documents;
+:Calculate risk score (ML);
+
+if (Risk score > threshold?) then (high)
+  |Customs Officer|
+  :Manual review required;
+  :Inspect supporting documents;
+
+  if (Documents valid?) then (yes)
+    :Approve with conditions;
+  else (no)
+    :Hold declaration;
+    :Request additional docs;
+    stop
+  endif
+
+else (low)
+  :Auto-clearance eligible;
+endif
+
+|Customs Officer|
+:Final clearance decision;
+
+if (Approved?) then (yes)
+  :Update status = CLEARED;
+  :Publish customs.clearance event;
+  :Notify billing agent;
+else (no)
+  :Update status = HELD;
+  :Escalate to supervisor;
+endif
+
+|Billing Agent|
+:Calculate port charges;
+:Generate invoice;
+
+stop
+
+@enduml

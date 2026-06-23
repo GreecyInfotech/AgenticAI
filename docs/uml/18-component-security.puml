@@ -1,0 +1,77 @@
+@startuml 18-component-security
+title Component Diagram — Security & Identity Layer
+
+package "Client Layer" {
+  [Browser / Mobile App] as Client
+}
+
+package "API Gateway Security" {
+  [Helmet Middleware] as Helmet
+  [CORS Policy] as CORS
+  [Throttler\n(100 req/min)] as Throttle
+  [JWT Strategy] as JWT
+  [Auth Service] as AuthSvc
+  [RBAC Guard] as RBAC
+}
+
+package "Identity Providers" {
+  [Local JWT\n(HS256)] as LocalJWT
+  [Okta OIDC] as Okta
+  [Azure AD / Entra ID] as AzureAD
+}
+
+package "Authorization" {
+  [Role Definitions] as Roles
+  [Permission Matrix] as Perms
+  [require_roles()] as RoleCheck
+}
+
+package "Audit & Secrets" {
+  [Audit Logger] as Audit
+  [Secrets Manager\n(Key Vault / GCP)] as Secrets
+  database "audit_log\n(PostgreSQL)" as AuditDB
+}
+
+package "Agent Security" {
+  [Token Verification\n(PyJWT)] as PyJWT
+  [Agent RBAC] as AgentRBAC
+}
+
+Client --> Helmet : HTTPS
+Helmet --> CORS
+CORS --> Throttle
+Throttle --> JWT
+
+JWT --> AuthSvc
+AuthSvc --> LocalJWT : dev
+AuthSvc --> Okta : production
+AuthSvc --> AzureAD : production
+
+JWT --> RBAC
+RBAC --> Roles
+RBAC --> Perms
+RBAC --> RoleCheck
+
+RBAC --> Audit : log access
+Audit --> AuditDB
+
+AuthSvc --> Secrets : JWT_SECRET
+Okta --> Secrets : client credentials
+AzureAD --> Secrets : tenant secrets
+
+Client --> PyJWT : agent requests
+PyJWT --> AgentRBAC
+AgentRBAC --> Audit : log agent.invoke
+
+note right of Perms
+  Roles: admin, operator,
+  customs_officer, executive,
+  maintenance
+end note
+
+note bottom of Secrets
+  security/secrets/config.yaml
+  Never commit .env to git
+end note
+
+@enduml

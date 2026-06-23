@@ -1,0 +1,138 @@
+@startuml 17-package-diagram
+title Package Diagram — Monorepo Structure
+
+package "smart-port-ai-platform" {
+
+  package "frontend" {
+    [port-operations-ui]
+    [executive-dashboard]
+    [customs-dashboard]
+    [mobile-app]
+  }
+
+  package "api-gateway" {
+    [auth]
+    [routes]
+    [proxy]
+    [health]
+  }
+
+  package "agent-gateway" {
+    [agents]
+    [orchestration]
+    [auth]
+  }
+
+  package "agents" <<Python>> {
+    [vessel-agent]
+    [container-agent]
+    [customs-agent]
+    [billing-agent]
+    [maintenance-agent]
+    [incident-agent]
+    [planning-agent]
+    [safety-agent]
+    [weather-agent]
+    [logistics-agent]
+    [executive-agent]
+  }
+
+  package "mcp-servers" <<Python>> {
+    [tos-mcp]
+    [sap-mcp]
+    [postgres-mcp]
+    [kafka-mcp]
+    [customs-mcp]
+    [vessel-tracking-mcp]
+    [billing-mcp]
+    [gate-mcp]
+    [crane-mcp]
+    [weather-mcp]
+    [inventory-mcp]
+    [monitoring-mcp]
+  }
+
+  package "rag" <<Python>> {
+    [document-ingestion]
+    [chunking]
+    [embedding-service]
+    [vector-search]
+    [metadata-extraction]
+    [knowledge-management]
+  }
+
+  package "ml-platform" <<Python>> {
+    [vessel-delay-prediction]
+    [berth-optimization]
+    [crane-failure-prediction]
+    [truck-queue-prediction]
+    [congestion-prediction]
+    [anomaly-detection]
+    [revenue-forecasting]
+  }
+
+  package "event-platform" {
+    [kafka-topics]
+    [kafka-streams]
+    [event-schemas]
+    [dead-letter-queues]
+  }
+
+  package "data-platform" {
+    [postgres]
+    [pgvector]
+    [redis]
+    [elasticsearch]
+    [bigquery]
+    [cloud-storage]
+  }
+
+  package "security" {
+    [oauth2]
+    [okta]
+    [azure-ad]
+    [rbac]
+    [audit]
+    [secrets]
+  }
+
+  package "observability" {
+    [prometheus]
+    [grafana]
+    [opentelemetry]
+    [alerting]
+    [dashboards]
+  }
+
+  package "deployment" {
+    [terraform]
+    [kubernetes]
+    [helm]
+    [cloudrun]
+    [github-actions]
+  }
+
+  package "shared" {
+    [smart_port_common <<Python>>]
+    [smart-port-types <<TypeScript>>]
+  }
+}
+
+frontend --> api-gateway : REST
+frontend --> agent-gateway : REST
+api-gateway --> agents
+agent-gateway --> agents
+agents --> mcp-servers
+agents --> rag
+agents --> ml-platform
+agents --> event-platform
+api-gateway --> data-platform
+rag --> data-platform
+mcp-servers --> data-platform
+event-platform --> data-platform
+agents ..> shared
+api-gateway ..> shared
+agent-gateway ..> shared
+frontend ..> shared
+
+@enduml

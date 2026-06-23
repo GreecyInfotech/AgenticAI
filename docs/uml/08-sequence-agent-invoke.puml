@@ -1,0 +1,46 @@
+@startuml 08-sequence-agent-invoke
+title Single Agent Invocation Flow
+
+actor User
+participant "Frontend / Client" as Client
+participant "Agent Gateway" as AGW
+participant "Domain Agent\n(e.g. vessel-agent)" as Agent
+participant "LangGraph\nReAct Agent" as LG
+participant "LLM Provider\n(GPT-4o)" as LLM
+participant "MCP Server\n(e.g. tos-mcp)" as MCP
+database "PostgreSQL" as DB
+queue "Kafka" as Kafka
+participant "Audit Logger" as Audit
+
+User -> Client : "What vessels arrive today?"
+Client -> AGW : POST /agents/v1/vessel/invoke\n{query, context, session_id}\nBearer JWT
+
+AGW -> AGW : Validate JWT & RBAC\n(agent:invoke)
+AGW -> Agent : POST /invoke\n{query, context}
+
+Agent -> LG : ainvoke(messages, tools)
+LG -> LLM : System prompt + user query
+LLM --> LG : tool_call: get_vessel_schedule
+
+LG -> MCP : query_tos("today's schedule")
+MCP -> DB : SELECT vessel_calls...
+DB --> MCP : rows
+MCP --> LG : schedule JSON
+
+LG -> LLM : tool result
+LLM --> LG : final answer
+
+LG --> Agent : {messages, tool_calls}
+Agent -> Kafka : publish agent.invocations
+Agent -> Audit : log invocation
+Agent --> AGW : AgentResponse\n{answer, tools_used, confidence}
+
+AGW --> Client : 200 OK
+Client --> User : Display answer
+
+note over Agent, LLM
+  Without OPENAI_API_KEY configured,
+  agent returns error or degraded response.
+end note
+
+@enduml

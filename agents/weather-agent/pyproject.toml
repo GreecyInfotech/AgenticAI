@@ -1,0 +1,22 @@
+[project]
+name = "weather-agent"
+version = "1.0.0"
+description = "Weather impact analysis and operational advisory agent"
+requires-python = ">=3.11"
+dependencies = [
+    "smart-port-common",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "langchain>=0.3",
+    "langchain-openai>=0.2",
+    "langgraph>=0.2",
+    "httpx>=0.27",
+    "pydantic>=2.0",
+]
+
+[tool.uv.sources]
+smart-port-common = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

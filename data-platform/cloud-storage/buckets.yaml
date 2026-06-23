@@ -1,0 +1,30 @@
+# Google Cloud Storage bucket configuration
+
+buckets:
+  documents:
+    name: "${GCP_PROJECT_ID}-smart-port-documents"
+    location: us-central1
+    storage_class: STANDARD
+    lifecycle:
+      - age_days: 90
+        action: SetStorageClass
+        storage_class: NEARLINE
+      - age_days: 365
+        action: SetStorageClass
+        storage_class: COLDLINE
+
+  ml-models:
+    name: "${GCP_PROJECT_ID}-smart-port-ml-models"
+    location: us-central1
+    versioning: true
+
+  backups:
+    name: "${GCP_PROJECT_ID}-smart-port-backups"
+    location: us-central1
+    storage_class: COLDLINE
+    retention_days: 2555  # 7 years for compliance
+
+paths:
+  documents: "documents/{year}/{month}/{document_id}"
+  ml_models: "models/{model_name}/{version}/"
+  backups: "backups/{service}/{date}/"

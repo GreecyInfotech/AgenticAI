@@ -1,0 +1,45 @@
+@startuml 13-activity-vessel-arrival
+title Activity Diagram — Vessel Arrival Process
+
+|Port Operator|
+start
+:Monitor AIS / vessel tracking;
+:Receive vessel arrival notification;
+
+|Vessel Agent|
+:Query vessel schedule;
+:Assess weather impact;
+
+if (Weather delay expected?) then (yes)
+  :Adjust ETA;
+  :Notify stakeholders via Kafka;
+else (no)
+endif
+
+|Planning Agent|
+:Check berth availability;
+:Run berth optimization (ML);
+
+if (Berth available?) then (yes)
+  :Allocate berth;
+  :Publish berth.allocations event;
+else (no)
+  :Queue vessel at anchorage;
+  :Trigger congestion prediction;
+endif
+
+|Container Agent|
+:Prepare yard capacity;
+:Plan container discharge moves;
+
+|Customs Agent|
+:Pre-screen customs declarations;
+:Flag high-risk cargo;
+
+|Port Operator|
+:Confirm berthing plan;
+:Update TOS via MCP;
+
+stop
+
+@enduml

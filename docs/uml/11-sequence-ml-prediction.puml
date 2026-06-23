@@ -1,0 +1,42 @@
+@startuml 11-sequence-ml-prediction
+title ML Prediction Flow
+
+actor User
+participant "Frontend / Agent" as Client
+participant "API Gateway" as API
+participant "ML Service\n(vessel-delay-prediction)" as ML
+participant "Model Registry\n(joblib / GCS)" as Model
+database "Feature Store\n(Postgres / BigQuery)" as Features
+participant "Kafka" as Kafka
+
+User -> Client : Request delay prediction\nfor incoming vessel
+Client -> API : POST /ml/vessel-delay/predict\nBearer JWT
+
+API -> API : RBAC check (ml:predict)
+API -> ML : POST /predict\n{vessel_type, origin,\nweather_score, congestion_level}
+
+ML -> Features : (optional) fetch\nhistorical features
+Features --> ML : feature vector
+
+ML -> Model : load_model()\nGradientBoostingRegressor
+Model --> ML : trained model
+
+ML -> ML : predict(X)\n→ delay hours
+ML -> Kafka : publish prediction event
+ML --> API : PredictionResponse\n{prediction, confidence, model_version}
+
+API --> Client : 200 OK
+Client --> User : "Predicted delay: 4.2 hours\n(confidence: 82%)"
+
+note over ML
+  ML Services (ports 8300-8306):
+  • vessel-delay-prediction
+  • berth-optimization
+  • crane-failure-prediction
+  • truck-queue-prediction
+  • congestion-prediction
+  • anomaly-detection
+  • revenue-forecasting
+end note
+
+@enduml

@@ -1,0 +1,36 @@
+@startuml 01-system-context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Smart Port AI Platform — System Context Diagram
+
+Person(operator, "Port Operator", "Manages vessels, containers, yard operations")
+Person(customs, "Customs Officer", "Reviews declarations and clearance")
+Person(executive, "Executive", "Views KPIs and strategic analytics")
+Person(maintenance, "Maintenance Engineer", "Monitors equipment health")
+Person(admin, "Platform Admin", "Manages users, config, deployments")
+
+System(smartport, "Smart Port AI Platform", "Multi-agent port digital transformation platform combining operations, AI, ML, RAG, and enterprise integrations")
+
+System_Ext(tos, "Terminal Operating System", "Vessel & container operations")
+System_Ext(sap, "SAP ERP", "Finance, billing, procurement")
+System_Ext(customs_auth, "Customs Authority", "National customs systems")
+System_Ext(ais, "AIS / Vessel Tracking", "Real-time vessel positions")
+System_Ext(weather_api, "Weather Services", "Forecasts, tides, alerts")
+System_Ext(llm, "LLM Provider", "OpenAI / Azure OpenAI")
+System_Ext(idp, "Identity Provider", "Okta / Azure AD")
+
+Rel(operator, smartport, "Operates port", "HTTPS")
+Rel(customs, smartport, "Clears cargo", "HTTPS")
+Rel(executive, smartport, "Reviews KPIs", "HTTPS")
+Rel(maintenance, smartport, "Maintains equipment", "HTTPS")
+Rel(admin, smartport, "Administers platform", "HTTPS")
+
+Rel(smartport, tos, "Sync operations", "MCP / API")
+Rel(smartport, sap, "Sync billing", "MCP / API")
+Rel(smartport, customs_auth, "Submit declarations", "MCP / API")
+Rel(smartport, ais, "Track vessels", "MCP / API")
+Rel(smartport, weather_api, "Get forecasts", "MCP / API")
+Rel(smartport, llm, "Agent reasoning", "HTTPS")
+Rel(smartport, idp, "Authenticate users", "OAuth2/OIDC")
+
+@enduml

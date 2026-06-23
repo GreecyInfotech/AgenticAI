@@ -1,0 +1,14 @@
+"""Okta SSO integration configuration."""
+
+OKTA_CONFIG = {
+    "domain_env": "OKTA_DOMAIN",
+    "client_id_env": "OKTA_CLIENT_ID",
+    "client_secret_env": "OKTA_CLIENT_SECRET",
+    "group_role_mapping": {
+        "SmartPort-Admins": ["admin", "operator"],
+        "SmartPort-Operators": ["operator"],
+        "SmartPort-Customs": ["customs_officer"],
+        "SmartPort-Executives": ["executive"],
+        "SmartPort-Maintenance": ["maintenance"],
+    },
+}

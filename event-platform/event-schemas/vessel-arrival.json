@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "VesselArrivalEvent",
+  "type": "object",
+  "required": ["event_id", "event_type", "timestamp", "vessel_id", "eta"],
+  "properties": {
+    "event_id": { "type": "string", "format": "uuid" },
+    "event_type": { "type": "string", "const": "vessel.arrival" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "vessel_id": { "type": "string" },
+    "vessel_name": { "type": "string" },
+    "imo": { "type": "string" },
+    "eta": { "type": "string", "format": "date-time" },
+    "berth_id": { "type": "string" },
+    "teu_count": { "type": "integer" },
+    "origin_port": { "type": "string" }
+  }
+}

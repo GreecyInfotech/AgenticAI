@@ -1,0 +1,32 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: api-gateway
+    metrics_path: /api/v1/health
+    static_configs:
+      - targets: ["api-gateway:8080"]
+
+  - job_name: agent-gateway
+    static_configs:
+      - targets: ["agent-gateway:8081"]
+
+  - job_name: agents
+    static_configs:
+      - targets:
+          - vessel-agent:8100
+          - container-agent:8101
+          - customs-agent:8102
+          - billing-agent:8103
+          - executive-agent:8110
+
+  - job_name: ml-services
+    static_configs:
+      - targets:
+          - vessel-delay-prediction:8300
+          - congestion-prediction:8304

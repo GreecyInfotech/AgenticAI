@@ -1,0 +1,99 @@
+# Kafka Topics Configuration for Smart Port AI Platform
+
+topics:
+  # Vessel domain
+  - name: vessel.arrivals
+    partitions: 6
+    replication_factor: 3
+    retention_ms: 604800000  # 7 days
+    cleanup_policy: delete
+
+  - name: vessel.departures
+    partitions: 6
+    replication_factor: 3
+    retention_ms: 604800000
+
+  - name: berth.allocations
+    partitions: 3
+    replication_factor: 3
+    retention_ms: 2592000000  # 30 days
+
+  # Container domain
+  - name: container.moves
+    partitions: 12
+    replication_factor: 3
+    retention_ms: 604800000
+
+  - name: yard.status
+    partitions: 3
+    replication_factor: 3
+    retention_ms: 86400000  # 1 day
+
+  # Customs domain
+  - name: customs.declarations
+    partitions: 6
+    replication_factor: 3
+    retention_ms: 2592000000
+
+  - name: customs.clearance
+    partitions: 3
+    replication_factor: 3
+
+  # Billing domain
+  - name: billing.invoices
+    partitions: 3
+    replication_factor: 3
+    retention_ms: 7776000000  # 90 days
+
+  - name: billing.payments
+    partitions: 3
+    replication_factor: 3
+
+  # Operations
+  - name: incidents.created
+    partitions: 3
+    replication_factor: 3
+
+  - name: incidents.resolved
+    partitions: 3
+    replication_factor: 3
+
+  - name: safety.alerts
+    partitions: 3
+    replication_factor: 3
+
+  - name: weather.forecasts
+    partitions: 3
+    replication_factor: 3
+
+  - name: weather.alerts
+    partitions: 3
+    replication_factor: 3
+
+  # Agent events
+  - name: agent.invocations
+    partitions: 6
+    replication_factor: 3
+    retention_ms: 604800000
+
+  - name: agent.responses
+    partitions: 6
+    replication_factor: 3
+    retention_ms: 604800000
+
+  # Dead letter queues
+  - name: dlq.vessel
+    partitions: 3
+    replication_factor: 3
+
+  - name: dlq.container
+    partitions: 3
+    replication_factor: 3
+
+  - name: dlq.customs
+    partitions: 3
+    replication_factor: 3
+
+  - name: dlq.agent
+    partitions: 3
+    replication_factor: 3

@@ -1,0 +1,46 @@
+@startuml 02-container-diagram
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Smart Port AI Platform — Container Diagram
+
+Person(user, "Port User", "Operator, customs, executive")
+
+System_Boundary(platform, "Smart Port AI Platform") {
+    Container(frontends, "Frontend Apps", "React 18, Vite", "Port Ops, Executive, Customs, Mobile UIs")
+    Container(api_gw, "API Gateway", "NestJS, TypeScript", "REST API, auth, rate limiting, Swagger")
+    Container(agent_gw, "Agent Gateway", "NestJS, TypeScript", "Agent routing, multi-agent orchestration")
+    Container(agents, "AI Agents", "Python, FastAPI, LangGraph", "11 domain-specific agents")
+    Container(mcp, "MCP Servers", "Python, MCP SDK", "12 enterprise integration servers")
+    Container(rag, "RAG Pipeline", "Python, FastAPI", "Ingestion, chunking, embedding, vector search")
+    Container(ml, "ML Platform", "Python, scikit-learn", "7 prediction services")
+    Container(events, "Event Platform", "Apache Kafka", "Topics, streams, schemas, DLQ")
+    ContainerDb(postgres, "PostgreSQL", "pgvector", "Operational data, vectors, audit log")
+    ContainerDb(redis, "Redis", "Cache", "Sessions, rate limits, hot data")
+    ContainerDb(elasticsearch, "Elasticsearch", "Search", "Full-text & log search")
+    Container(obs, "Observability", "Prometheus, Grafana, OTEL", "Metrics, traces, dashboards")
+}
+
+System_Ext(enterprise, "Enterprise Systems", "TOS, SAP, Customs, AIS")
+System_Ext(llm, "LLM Provider", "GPT-4o / Azure OpenAI")
+
+Rel(user, frontends, "Uses", "HTTPS")
+Rel(frontends, api_gw, "API calls", "REST/JSON")
+Rel(frontends, agent_gw, "Agent queries", "REST/JSON")
+Rel(api_gw, agents, "Proxies", "REST")
+Rel(api_gw, ml, "Predictions", "REST")
+Rel(api_gw, rag, "Search", "REST")
+Rel(agent_gw, agents, "Invokes", "REST")
+Rel(agents, mcp, "Tool calls", "MCP stdio/HTTP")
+Rel(agents, llm, "Reasoning", "HTTPS")
+Rel(agents, rag, "Retrieve context", "REST")
+Rel(agents, events, "Publish events", "Kafka")
+Rel(mcp, enterprise, "Integrate", "API/DB")
+Rel(mcp, postgres, "Read/Write", "SQL")
+Rel(events, postgres, "Stream to DB", "Kafka Connect")
+Rel(rag, postgres, "Store vectors", "pgvector")
+Rel(api_gw, postgres, "Query", "SQL")
+Rel(api_gw, redis, "Cache", "Redis protocol")
+Rel(obs, api_gw, "Scrape metrics", "HTTP")
+Rel(obs, agents, "Collect traces", "OTLP")
+
+@enduml
