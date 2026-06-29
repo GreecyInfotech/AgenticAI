@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.bfsi.platform</groupId>
+    <artifactId>bfsi-agentic-ai-platform</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>BFSI Agentic AI Platform</name>
+    <description>Enterprise agentic AI platform for Banking, Financial Services, and Insurance</description>
+
+    <modules>
+        <!-- Shared -->
+        <module>agents/agent-common</module>
+        <module>bff/bff-common</module>
+        <!-- Edge & BFF -->
+        <module>api-gateway</module>
+        <module>bff/customer-bff</module>
+        <module>bff/employee-bff</module>
+        <module>bff/admin-bff</module>
+        <!-- AI Gateway -->
+        <module>ai-gateway</module>
+        <!-- RAG -->
+        <module>rag</module>
+        <!-- Tools -->
+        <module>tools</module>
+        <!-- Messaging -->
+        <module>messaging</module>
+        <!-- Search -->
+        <module>search</module>
+        <!-- Observability -->
+        <module>observability</module>
+        <!-- Agent platform -->
+        <module>agent-platform/orchestrator</module>
+        <module>agent-platform/agent-registry</module>
+        <module>agents/intent-agent</module>
+        <module>agents/customer-agent</module>
+        <module>agents/kyc-agent</module>
+        <module>agents/aml-agent</module>
+        <module>agents/fraud-agent</module>
+        <module>agents/loan-agent</module>
+        <module>agents/underwriting-agent</module>
+        <module>agents/claim-agent</module>
+        <module>agents/compliance-agent</module>
+        <module>agents/audit-agent</module>
+        <module>agents/recommendation-agent</module>
+        <module>agents/portfolio-agent</module>
+        <module>agents/escalation-agent</module>
+        <module>agents/notification-agent</module>
+    </modules>
+
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <spring-boot.version>3.3.4</spring-boot.version>
+        <spring-cloud.version>2023.0.3</spring-cloud.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.bfsi.platform</groupId>
+                <artifactId>agent-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bfsi.platform</groupId>
+                <artifactId>bff-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bfsi.platform</groupId>
+                <artifactId>rag-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bfsi.platform</groupId>
+                <artifactId>tools-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bfsi.platform</groupId>
+                <artifactId>tool-bindings</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bfsi.platform</groupId>
+                <artifactId>event-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bfsi.platform</groupId>
+                <artifactId>kafka-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bfsi.platform</groupId>
+                <artifactId>platform-observability</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bfsi.platform</groupId>
+                <artifactId>search-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bfsi.platform</groupId>
+                <artifactId>search-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>repackage</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

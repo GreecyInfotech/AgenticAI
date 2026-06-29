@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${PGVECTOR_HOST:localhost}:${PGVECTOR_PORT:5433}/${PGVECTOR_DB:bfsi_vectors}
+    username: ${PGVECTOR_USER:bfsi_vector}
+    password: ${PGVECTOR_PASSWORD:bfsi_vector_secret}
+    driver-class-name: org.postgresql.Driver
+
+rag:
+  vector:
+    store: pgvector

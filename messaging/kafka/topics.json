@@ -1,0 +1,34 @@
+{
+  "topics": [
+    {
+      "name": "bfsi.orchestration.events",
+      "partitions": 3,
+      "replicationFactor": 1,
+      "description": "Orchestration lifecycle events"
+    },
+    {
+      "name": "bfsi.agent.decisions",
+      "partitions": 3,
+      "replicationFactor": 1,
+      "description": "Agent decision audit stream"
+    },
+    {
+      "name": "bfsi.audit.events",
+      "partitions": 3,
+      "replicationFactor": 1,
+      "description": "Immutable audit log events"
+    },
+    {
+      "name": "bfsi.notification.events",
+      "partitions": 2,
+      "replicationFactor": 1,
+      "description": "Outbound notification requests"
+    },
+    {
+      "name": "bfsi.search.index",
+      "partitions": 3,
+      "replicationFactor": 1,
+      "description": "Search index pipeline events"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+server:
+  port: 8414
+spring:
+  application:
+    name: notification-agent
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

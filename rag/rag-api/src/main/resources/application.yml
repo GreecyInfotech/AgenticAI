@@ -1,0 +1,29 @@
+server:
+  port: ${RAG_PORT:8350}
+  shutdown: graceful
+
+spring:
+  application:
+    name: rag-api
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+
+rag:
+  embedding:
+    ai-gateway-url: ${AI_GATEWAY_URL:http://localhost:8300}
+    model: ${EMBEDDING_MODEL:text-embedding-3-small}
+    dimensions: 1536
+    fallback-to-local: true
+  vector:
+    store: ${RAG_VECTOR_STORE:memory}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    com.bfsi.platform.rag: INFO

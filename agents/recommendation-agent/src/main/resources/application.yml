@@ -1,0 +1,10 @@
+server:
+  port: 8411
+spring:
+  application:
+    name: recommendation-agent
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

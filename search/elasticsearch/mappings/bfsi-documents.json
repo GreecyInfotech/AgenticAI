@@ -1,0 +1,29 @@
+{
+  "index_patterns": ["bfsi-documents*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0,
+      "analysis": {
+        "analyzer": {
+          "bfsi_analyzer": {
+            "type": "standard",
+            "stopwords": "_english_"
+          }
+        }
+      }
+    },
+    "mappings": {
+      "properties": {
+        "title": { "type": "text", "analyzer": "bfsi_analyzer" },
+        "content": { "type": "text", "analyzer": "bfsi_analyzer" },
+        "indexType": { "type": "keyword" },
+        "customerId": { "type": "keyword" },
+        "agentType": { "type": "keyword" },
+        "source": { "type": "keyword" },
+        "indexedAt": { "type": "date" },
+        "metadata": { "type": "object", "enabled": true }
+      }
+    }
+  }
+}

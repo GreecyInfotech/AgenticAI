@@ -1,0 +1,10 @@
+server:
+  port: 8410
+spring:
+  application:
+    name: audit-agent
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

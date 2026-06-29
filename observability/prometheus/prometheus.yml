@@ -1,0 +1,69 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    platform: bfsi
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: bfsi-gateway
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.docker.internal:8000"]
+        labels:
+          service: api-gateway
+
+  - job_name: bfsi-orchestrator
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.docker.internal:8200"]
+        labels:
+          service: orchestrator
+
+  - job_name: bfsi-ai-gateway
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.docker.internal:8300"]
+        labels:
+          service: ai-gateway
+
+  - job_name: bfsi-rag
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.docker.internal:8350"]
+        labels:
+          service: rag-api
+
+  - job_name: bfsi-search
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.docker.internal:8370"]
+        labels:
+          service: search-api
+
+  - job_name: bfsi-tools
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.docker.internal:8450"]
+        labels:
+          service: tools-api
+
+  - job_name: bfsi-messaging
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.docker.internal:8550"]
+        labels:
+          service: messaging-api
+
+  - job_name: bfsi-bff
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - host.docker.internal:8101
+          - host.docker.internal:8102
+          - host.docker.internal:8103
+        labels:
+          service: bff

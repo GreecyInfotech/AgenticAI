@@ -1,0 +1,22 @@
+server:
+  port: ${TOOLS_PORT:8450}
+  shutdown: graceful
+
+spring:
+  application:
+    name: tools-api
+
+tools:
+  mcp:
+    enabled: true
+    timeout-seconds: 15
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    com.bfsi.platform.tools: INFO

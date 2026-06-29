@@ -1,0 +1,19 @@
+server:
+  port: 8300
+spring:
+  application:
+    name: ai-gateway
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+ai:
+  routing:
+    allow-mock: true
+  providers:
+    openai:
+      enabled: true
+      api-key: ""
+  cache:
+    enabled: true
+    use-redis: false

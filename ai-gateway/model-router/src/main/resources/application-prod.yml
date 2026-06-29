@@ -1,0 +1,28 @@
+ai:
+  routing:
+    allow-mock: false
+  cache:
+    enabled: true
+    use-redis: true
+    ttl-seconds: 1800
+  token:
+    max-prompt-tokens: 8192
+    max-completion-tokens: 4096
+    max-session-tokens: 50000
+
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+
+management:
+  endpoint:
+    health:
+      show-details: when_authorized
+
+logging:
+  level:
+    com.bfsi.platform.aigateway: INFO
+    org.springframework.web.client: WARN

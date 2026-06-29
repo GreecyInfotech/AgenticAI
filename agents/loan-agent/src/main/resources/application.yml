@@ -1,0 +1,10 @@
+server:
+  port: 8406
+spring:
+  application:
+    name: loan-agent
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

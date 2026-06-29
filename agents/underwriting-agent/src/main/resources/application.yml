@@ -1,0 +1,10 @@
+server:
+  port: 8407
+spring:
+  application:
+    name: underwriting-agent
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

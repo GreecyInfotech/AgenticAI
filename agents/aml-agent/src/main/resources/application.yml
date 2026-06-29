@@ -1,0 +1,10 @@
+server:
+  port: 8404
+spring:
+  application:
+    name: aml-agent
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

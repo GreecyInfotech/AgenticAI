@@ -1,0 +1,15 @@
+server:
+  port: 8102
+spring:
+  application:
+    name: employee-bff
+bff:
+  orchestrator:
+    url: http://localhost:8200
+  escalation-agent:
+    url: http://localhost:8413
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

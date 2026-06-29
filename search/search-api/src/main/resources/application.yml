@@ -1,0 +1,23 @@
+server:
+  port: ${SEARCH_PORT:8370}
+  shutdown: graceful
+
+spring:
+  application:
+    name: search-api
+
+search:
+  backend: ${SEARCH_BACKEND:memory}
+  host: ${ELASTICSEARCH_HOST:localhost}
+  port: ${ELASTICSEARCH_PORT:9200}
+  index-prefix: ${ELASTICSEARCH_INDEX_PREFIX:bfsi}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+
+logging:
+  level:
+    com.bfsi.platform.search: INFO

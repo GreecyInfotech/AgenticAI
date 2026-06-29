@@ -1,0 +1,12 @@
+server:
+  port: 8201
+spring:
+  application:
+    name: agent-registry
+agents:
+  host: localhost
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

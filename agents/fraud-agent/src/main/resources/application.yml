@@ -1,0 +1,10 @@
+server:
+  port: 8405
+spring:
+  application:
+    name: fraud-agent
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

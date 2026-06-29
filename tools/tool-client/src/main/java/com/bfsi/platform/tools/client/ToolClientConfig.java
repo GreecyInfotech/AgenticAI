@@ -1,0 +1,22 @@
+package com.bfsi.platform.tools.client;
+
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
+
+import java.time.Duration;
+
+@Configuration
+@EnableConfigurationProperties(ToolClientProperties.class)
+public class ToolClientConfig {
+
+    @Bean
+    RestTemplate toolRestTemplate(RestTemplateBuilder builder, ToolClientProperties properties) {
+        return builder
+            .setConnectTimeout(Duration.ofSeconds(properties.getTimeoutSeconds()))
+            .setReadTimeout(Duration.ofSeconds(properties.getTimeoutSeconds()))
+            .build();
+    }
+}

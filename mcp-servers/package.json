@@ -1,0 +1,19 @@
+{
+  "name": "bfsi-mcp-servers",
+  "version": "0.1.0",
+  "description": "MCP-compatible tool servers for BFSI platform",
+  "type": "module",
+  "scripts": {
+    "start": "node src/start-all.js",
+    "start:core-banking": "node src/servers/core-banking.js",
+    "start:crm": "node src/servers/crm.js",
+    "start:postgres": "node src/servers/postgres.js",
+    "start:regulatory": "node src/servers/regulatory.js",
+    "start:email": "node src/servers/email.js",
+    "start:jira": "node src/servers/jira.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "pg": "^8.13.0"
+  }
+}

@@ -1,0 +1,10 @@
+server:
+  port: 8412
+spring:
+  application:
+    name: portfolio-agent
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

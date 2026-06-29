@@ -1,0 +1,63 @@
+server:
+  port: ${AI_GATEWAY_PORT:8300}
+  shutdown: graceful
+
+spring:
+  application:
+    name: ai-gateway
+
+ai:
+  routing:
+    default-chat-model: ${DEFAULT_LLM_MODEL:gpt-4o}
+    default-embedding-model: ${EMBEDDING_MODEL:text-embedding-3-small}
+    azure-deployment: ${AZURE_OPENAI_DEPLOYMENT:}
+    allow-mock: true
+    agent-models:
+      INTENT: gpt-4o-mini
+      KYC: gpt-4o
+      AML: gpt-4o
+      FRAUD: gpt-4o
+      COMPLIANCE: gpt-4o
+      LOAN: gpt-4o-mini
+      UNDERWRITING: gpt-4o
+      CLAIM: gpt-4o
+      RECOMMENDATION: gpt-4o-mini
+      PORTFOLIO: gpt-4o
+  providers:
+    openai:
+      enabled: true
+      api-key: ${OPENAI_API_KEY:}
+      base-url: https://api.openai.com/v1
+      timeout-seconds: 60
+    azure-openai:
+      enabled: ${AZURE_OPENAI_ENABLED:false}
+      endpoint: ${AZURE_OPENAI_ENDPOINT:}
+      api-key: ${AZURE_OPENAI_API_KEY:}
+      deployment: ${AZURE_OPENAI_DEPLOYMENT:}
+      api-version: 2024-08-01-preview
+      timeout-seconds: 60
+  token:
+    max-prompt-tokens: 8192
+    max-completion-tokens: 4096
+    max-session-tokens: 100000
+  cache:
+    enabled: true
+    use-redis: ${REDIS_ENABLED:false}
+    ttl-seconds: 3600
+    key-prefix: "ai-gateway:"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: ai-gateway
+
+logging:
+  level:
+    com.bfsi.platform.aigateway: INFO

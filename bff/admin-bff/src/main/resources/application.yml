@@ -1,0 +1,15 @@
+server:
+  port: 8103
+spring:
+  application:
+    name: admin-bff
+bff:
+  orchestrator:
+    url: http://localhost:8200
+  registry:
+    url: http://localhost:8201
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

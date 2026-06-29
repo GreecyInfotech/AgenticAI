@@ -1,0 +1,13 @@
+server:
+  port: 8101
+spring:
+  application:
+    name: customer-bff
+bff:
+  orchestrator:
+    url: http://localhost:8200
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
