@@ -1,21 +1,5 @@
-from __future__ import annotations
+"""Delegates to shared.logging — use shared.logging in new code."""
 
-import logging
+from shared.logging import configure_logging, get_logger
 
-import structlog
-
-
-def configure_logging(level: str = "INFO") -> None:
-    log_level = getattr(logging, level.upper(), logging.INFO)
-    structlog.configure(
-        processors=[
-            structlog.processors.add_log_level,
-            structlog.processors.TimeStamper(fmt="iso"),
-            structlog.dev.ConsoleRenderer(),
-        ],
-        wrapper_class=structlog.make_filtering_bound_logger(log_level),
-    )
-
-
-def get_logger(name: str):
-    return structlog.get_logger(name)
+__all__ = ["configure_logging", "get_logger"]

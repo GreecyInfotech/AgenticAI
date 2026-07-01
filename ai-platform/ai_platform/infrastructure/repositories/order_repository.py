@@ -3,8 +3,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from shared.constants.status import ORDER_STATUS_CREATED
-from shared.exceptions import NotFoundError
+from shared.constants.status import ORDER_STATUS_CANCELLED, ORDER_STATUS_CREATED
+from shared.exceptions import ConflictError, NotFoundError
 from shared.logging import get_logger
 from shared.utils.ids import generate_id
 
@@ -92,3 +92,27 @@ class OrderRepository:
         if customer_id:
             orders = [o for o in orders if o["customer_id"] == customer_id]
         return orders[offset : offset + limit]
+
+    async def cancel(self, order_id: str, reason: str) -> dict[str, Any]:
+        order = await self.get_by_id(order_id)
+        if order["status"] == ORDER_STATUS_CANCELLED:
+            raise ConflictError(f"Order {order_id} is already cancelled")
+
+        order["status"] = ORDER_STATUS_CANCELLED
+        order["cancel_reason"] = reason
+
+        from ai_platform.infrastructure.database import get_pool
+
+        pool = get_pool()
+        if pool is not None:
+            async with pool.acquire() as conn:
+                await conn.execute(
+                    "UPDATE orders SET status = $1 WHERE order_id = $2",
+                    ORDER_STATUS_CANCELLED,
+                    order_id,
+                )
+        else:
+            _memory_orders[order_id] = order
+
+        logger.info("order_cancelled", order_id=order_id, reason=reason)
+        return order

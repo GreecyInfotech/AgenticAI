@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-PERMISSIONS = {
-    "admin": ["*"],
-    "distributor": ["order:create", "order:read", "inventory:read"],
-    "sales_rep": ["order:read", "customer:read"],
-    "viewer": ["order:read"],
-}
+from shared.security.jwt import ROLE_PERMISSIONS as PERMISSIONS
+
+__all__ = ["PERMISSIONS"]

@@ -49,3 +49,20 @@ class InventoryRepository:
                 )
         logger.info("inventory_reserved", sku=sku, quantity=quantity, order_id=order_id)
         return {"sku": sku, "reserved": quantity, "order_id": order_id, "remaining": item["available"]}
+
+    async def release(self, sku: str, quantity: int, order_id: str) -> dict[str, Any]:
+        item = await self.get_by_sku(sku)
+        item["available"] += quantity
+
+        from ai_platform.infrastructure.database import get_pool
+
+        pool = get_pool()
+        if pool is not None:
+            async with pool.acquire() as conn:
+                await conn.execute(
+                    "UPDATE inventory SET available = available + $1 WHERE sku = $2",
+                    quantity,
+                    sku,
+                )
+        logger.info("inventory_released", sku=sku, quantity=quantity, order_id=order_id)
+        return {"sku": sku, "released": quantity, "order_id": order_id, "remaining": item["available"]}

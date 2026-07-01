@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-INJECTION_PATTERNS = ["ignore previous", "system prompt", "you are now", "disregard"]
+from shared.security.prompt_injection import is_prompt_injection
 
-
-def is_prompt_injection(text: str) -> bool:
-    lower = text.lower()
-    return any(p in lower for p in INJECTION_PATTERNS)
+__all__ = ["is_prompt_injection"]

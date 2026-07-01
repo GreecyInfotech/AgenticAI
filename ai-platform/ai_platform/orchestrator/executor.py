@@ -14,6 +14,9 @@ class WorkflowExecutor:
             "agent_results": [],
             "reply": None,
             "requires_escalation": False,
+            "memory_summary": "",
+            "rag_context": "",
+            "conversation_history": [],
         }
         result = await orchestrator_graph.ainvoke(initial)
         return result  # type: ignore[return-value]
@@ -23,6 +26,4 @@ class WorkflowExecutorSync:
     def execute(self, session_id: str, customer_id: str, message: str) -> OrchestratorState:
         import asyncio
 
-        return asyncio.get_event_loop().run_until_complete(
-            WorkflowExecutor().execute(session_id, customer_id, message)
-        )
+        return asyncio.run(WorkflowExecutor().execute(session_id, customer_id, message))

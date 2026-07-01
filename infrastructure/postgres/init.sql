@@ -35,6 +35,23 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 
+CREATE TABLE IF NOT EXISTS conversation_summaries (
+    session_id VARCHAR(128) PRIMARY KEY,
+    customer_id VARCHAR(64) NOT NULL,
+    summary TEXT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS long_term_memory (
+    customer_id VARCHAR(64) NOT NULL,
+    memory_key VARCHAR(128) NOT NULL,
+    memory_value TEXT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (customer_id, memory_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_ltm_customer ON long_term_memory(customer_id);
+
 INSERT INTO customers (customer_id, name, tier, credit_limit) VALUES
     ('CUST-001', 'Demo Distributor', 'gold', 50000.00)
 ON CONFLICT (customer_id) DO NOTHING;

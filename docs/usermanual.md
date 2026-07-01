@@ -21,6 +21,8 @@ Complete guide to the repository layout, environment setup, configuration, and r
 13. [CI/CD Pipelines](#13-cicd-pipelines)
 14. [Troubleshooting](#14-troubleshooting)
 15. [Frontend Application](#15-frontend-application)
+16. [Application Layer (CQRS)](#16-application-layer-cqrs)
+17. [Infrastructure Clients](#17-infrastructure-clients)
 
 ---
 
@@ -40,15 +42,18 @@ The **AI Distributor Ordering Platform** is an event-driven system for B2B distr
 Frontend / Mobile
        │
        ▼
-   Gateway (API entry point)
+   Gateway (API entry point, port 8080)
        │
        ▼
-AI Platform (FastAPI + LangGraph)
-  ├── Supervisor Agent → routes to specialist agents
+AI Platform (FastAPI + LangGraph, port 8000)
+  ├── API Layer (JWT, idempotency, pagination)
+  ├── Application Layer (use cases, handlers, DTOs)
+  ├── Orchestrator (supervisor → domain agents)
   ├── 14 Domain Agents (order, inventory, pricing, …)
-  ├── RAG (Qdrant + embeddings)
-  ├── LLM providers
-  └── Tools → ERP / CRM / SAP adapters
+  ├── RAG (Qdrant + embeddings + keyword fallback)
+  ├── LLM (OpenAI / Ollama / Azure, guardrails, cost tracking)
+  ├── Memory (Redis sessions, Postgres summaries)
+  └── Tools → CRM / Email / ERP adapters
        │
        ▼ (Kafka events)
 Microservices ←→ Postgres / Redis / Qdrant
@@ -98,16 +103,21 @@ ai-distributor-ordering-platform/
 │   └── usermanual.md         # This file
 │
 ├── infrastructure/           # DevOps and platform infrastructure
-│   ├── docker/               # Dockerfiles
+│   ├── docker/               # Dockerfiles (ai-platform, gateway, frontend, services)
 │   ├── kubernetes/           # K8s manifests
 │   ├── terraform/            # Cloud infrastructure as code
 │   ├── helm/                 # Helm charts
-│   ├── kafka/                # Kafka topic definitions
-│   ├── redis/                # Redis configuration
-│   ├── postgres/             # Database init scripts
-│   ├── qdrant/               # Vector DB configuration
+│   ├── kafka/                # Topic list + create-topics.sh
+│   ├── redis/                # redis.conf (AOF, maxmemory policy)
+│   ├── postgres/             # init.sql + migrations/
 │   ├── monitoring/           # Prometheus, Grafana configs
 │   └── nginx/                # Reverse proxy / load balancer
+│
+├── prompts/                  # Jinja2 prompt templates (repo root)
+│   ├── system/               # Base system prompts
+│   ├── templates/            # Per-agent Jinja2 templates
+│   ├── rag/                  # RAG context injection templates
+│   └── few_shots/            # Versioned few-shot examples (per agent)
 │
 ├── shared/                   # Cross-service Python libraries
 │   ├── common/               # Shared base types and helpers
@@ -182,6 +192,7 @@ ai-distributor-ordering-platform/
 | `prompts/` | Prompt design rationale and versioning | LLM behavior auditability |
 | `runbooks/` | Incident response and operational procedures | Production support playbook |
 | `ADR/` | Architecture Decision Records | Historical context for design choices |
+| `usermanual.md` | This file — complete platform reference | Onboarding, config, run, troubleshoot |
 
 ---
 
@@ -193,10 +204,9 @@ ai-distributor-ordering-platform/
 | `kubernetes/` | K8s Deployment, Service, Ingress manifests | Production orchestration |
 | `terraform/` | Cloud resource provisioning (VPC, AKS, RDS) | Infrastructure as code |
 | `helm/` | Parameterized K8s deployments | Environment-specific releases |
-| `kafka/` | Topic names and partition config | Event bus contract between services |
-| `redis/` | Cache and session store config | Agent session memory, rate limiting |
-| `postgres/` | Schema migrations, init scripts | Persistent relational data |
-| `qdrant/` | Vector collection config | RAG knowledge base storage |
+| `kafka/` | `topics.txt`, `create-topics.sh` | Event bus topic contract; shell script for manual topic creation |
+| `redis/` | `redis.conf` | AOF persistence, maxmemory policy (used by Docker Compose) |
+| `postgres/` | `init.sql`, `migrations/` | Schema bootstrap (customers, orders, memory tables) |
 | `monitoring/` | Prometheus scrape config, Grafana dashboards | Production health visibility |
 | `nginx/` | Reverse proxy, TLS termination, routing | Single public entry point |
 
@@ -247,11 +257,12 @@ The heart of the platform. Contains the LangGraph orchestrator, all 14 agents, R
 | `ai_platform/workflows/` | `place_order`, `track_shipment`, etc. | High-level business process definitions |
 | `ai_platform/api/v1/` | FastAPI route handlers | HTTP interface for clients |
 | `ai_platform/domain/` | Entities, repositories, domain services | Clean Architecture domain layer |
-| `ai_platform/application/` | Use cases, commands, queries, DTOs | Application business logic |
-| `ai_platform/infrastructure/` | DB, Kafka, Qdrant, Redis adapters | External system implementations |
-| `ai_platform/prompts/` | Jinja2 templates, few-shot examples | Versioned, auditable LLM prompts |
-| `ai_platform/security/` | JWT, prompt injection, PII, RBAC | Platform-specific security guards |
-| `ai_platform/config/` | `settings.py` — Pydantic settings from `.env` | Centralized runtime configuration |
+| `ai_platform/application/` | Use cases, commands, queries, handlers, DTOs | **CQRS application layer** — all API business logic flows through here |
+| `ai_platform/infrastructure/` | DB, Redis, Qdrant, Kafka, Email, CRM clients + repositories | Production adapters with health checks and graceful fallback |
+| `ai_platform/prompts/` | `loader.py`, `domain.py` — Jinja2 template utilities | Loads templates from repo-root `prompts/` directory |
+| `ai_platform/telemetry/` | Prometheus metrics, OTEL spans for LLM/agents | Custom observability beyond shared FastAPI instrumentation |
+| `ai_platform/security/` | OAuth/Okta stubs, delegates core auth to `shared.security` | Platform-specific IdP integration |
+| `ai_platform/config/` | `settings.py`, `dependencies.py` — Pydantic settings + DI | Centralized runtime configuration and repository factories |
 | `ai_platform/tests/` | Unit and integration tests for AI platform | Quality gate before deployment |
 
 #### The 14 Agents
@@ -275,6 +286,19 @@ The heart of the platform. Contains the LangGraph orchestrator, all 14 agents, R
 
 ---
 
+### `prompts/` — LLM Prompt Templates (Repo Root)
+
+| Path | Purpose | Why It Matters |
+|------|---------|----------------|
+| `prompts/system/` | Base system instructions | Shared guardrails for all agents |
+| `prompts/templates/` | Jinja2 per-agent templates | Versioned, auditable prompts (supervisor, knowledge, domain) |
+| `prompts/rag/` | RAG context injection templates | Citation placeholders for retrieved chunks |
+| `prompts/few_shots/` | Few-shot examples per agent | Consistent agent behavior across versions |
+
+Loaded at runtime by `ai_platform/prompts/loader.py` using Jinja2.
+
+---
+
 ### `services/` — Domain Microservices
 
 Each service is independently deployable with its own `Dockerfile` and `pyproject.toml`. They communicate via Kafka events.
@@ -293,14 +317,15 @@ Each service is independently deployable with its own `Dockerfile` and `pyprojec
 
 ---
 
-### `frontend/` and `mobile/`
+### `frontend/` — Web Application
 
 | Path | Purpose | Why It Matters |
 |------|---------|----------------|
-| `frontend/` | Web UI for distributors and sales reps | Primary user interface for ordering |
-| `mobile/` | iOS/Android app | Field sales and mobile ordering |
+| `frontend/` | React 19 + Vite 6 + TypeScript web UI | Primary distributor ordering interface |
+| `src/pages/` | Login, Dashboard, AI Assistant, Orders, Products, Inventory | Core user workflows |
+| `src/api/client.ts` | JWT auth, API client, Vite proxy | Connects UI to gateway/API |
 
-Both connect to the `gateway/` and consume `/api/v1/` endpoints.
+Both `frontend/` and `mobile/` connect to the `gateway/` (port 8080) or directly to the AI platform (port 8000) and consume `/api/v1/` endpoints.
 
 ---
 
@@ -367,13 +392,24 @@ cp .env.example .env
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LLM_PROVIDER` | `openai` | Active provider: `openai`, `ollama`, `azure` |
+| `LLM_PROVIDER` | `openai` | Active provider: `openai`, `ollama`, `azure_openai` |
 | `OPENAI_API_KEY` | — | **Required** for OpenAI. Get from platform.openai.com |
 | `OPENAI_MODEL` | `gpt-4o-mini` | Model name for chat completions |
+| `OPENAI_EMBEDDING_MODEL` | `text-embedding-3-small` | Embedding model for RAG |
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama server URL (local LLM) |
+| `OLLAMA_MODEL` | `llama3.2` | Ollama model name |
+| `LLM_MAX_RETRIES` | `3` | Retry count for LLM provider calls |
+| `LLM_TIMEOUT_SECONDS` | `30.0` | LLM request timeout |
 | `AZURE_OPENAI_ENDPOINT` | — | Azure OpenAI resource endpoint |
 | `AZURE_OPENAI_API_KEY` | — | Azure OpenAI API key |
 | `AZURE_OPENAI_DEPLOYMENT` | — | Azure deployment name |
+
+#### Memory
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MEMORY_SESSION_TTL_SECONDS` | `86400` | Redis session TTL (24 hours) |
+| `MEMORY_SUMMARY_THRESHOLD` | `12` | Message count before conversation summarization |
 
 #### Database (PostgreSQL)
 
@@ -384,6 +420,9 @@ cp .env.example .env
 | `POSTGRES_USER` | `distributor` | Database username |
 | `POSTGRES_PASSWORD` | `distributor_secret` | Database password — **change in production** |
 | `POSTGRES_DB` | `distributor_platform` | Database name |
+| `POSTGRES_MIN_POOL` | `2` | Minimum asyncpg pool connections |
+| `POSTGRES_MAX_POOL` | `10` | Maximum asyncpg pool connections |
+| `POSTGRES_SSL` | `false` | Enable SSL for Postgres connections |
 
 #### Cache (Redis)
 
@@ -391,6 +430,9 @@ cp .env.example .env
 |----------|---------|-------------|
 | `REDIS_HOST` | `localhost` | Redis host. Use `redis` inside Docker Compose |
 | `REDIS_PORT` | `6379` | Redis port |
+| `REDIS_PASSWORD` | — | Redis AUTH password (optional) |
+| `REDIS_DB` | `0` | Redis database index |
+| `REDIS_SSL` | `false` | Enable TLS for Redis |
 
 #### Vector Store (Qdrant)
 
@@ -399,12 +441,42 @@ cp .env.example .env
 | `QDRANT_HOST` | `localhost` | Qdrant host. Use `qdrant` inside Docker Compose |
 | `QDRANT_PORT` | `6333` | Qdrant HTTP port |
 | `QDRANT_COLLECTION` | `distributor_knowledge` | RAG knowledge base collection name |
+| `QDRANT_API_KEY` | — | Qdrant API key (cloud/secured deployments) |
+| `QDRANT_HTTPS` | `false` | Use HTTPS for Qdrant client |
+| `QDRANT_ENABLED` | `true` | Set `false` to skip Qdrant initialization |
+| `RAG_BOOTSTRAP_ON_STARTUP` | `true` | Seed default knowledge docs on startup |
 
 #### Message Bus (Kafka)
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092` | Kafka broker address |
+| `KAFKA_ENABLED` | `true` | Set `false` for local dev without Kafka |
+| `KAFKA_CONSUMER_GROUP` | `ai-platform` | Consumer group for platform event listener |
+| `KAFKA_AUTO_CREATE_TOPICS` | `true` | Auto-create topics on startup |
+
+#### Email (SMTP)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `EMAIL_ENABLED` | `true` | Master switch for outbound email |
+| `SMTP_HOST` | `localhost` | SMTP server hostname |
+| `SMTP_PORT` | `587` | SMTP port (587 for STARTTLS) |
+| `SMTP_USER` | — | SMTP authentication username |
+| `SMTP_PASSWORD` | — | SMTP authentication password |
+| `SMTP_FROM` | `noreply@distributor.local` | Default sender address |
+| `SMTP_USE_TLS` | `true` | Enable STARTTLS |
+
+> When SMTP is not configured, emails are **logged** (dev mode) instead of sent.
+
+#### CRM Integration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CRM_PROVIDER` | `mock` | `mock` (in-memory + Postgres) or `rest` (HTTP API) |
+| `CRM_BASE_URL` | — | REST CRM base URL (required when `CRM_PROVIDER=rest`) |
+| `CRM_API_KEY` | — | Bearer token for REST CRM API |
+| `CRM_TIMEOUT_SECONDS` | `10.0` | HTTP timeout for CRM calls |
 
 #### Security
 
@@ -413,11 +485,14 @@ cp .env.example .env
 | `JWT_SECRET` | `change-me-in-production` | **Must change in production** — signs JWT tokens |
 | `JWT_ALGORITHM` | `HS256` | JWT signing algorithm |
 | `JWT_EXPIRE_MINUTES` | `60` | Token lifetime in minutes |
+| `OAUTH_ISSUER` | — | OAuth 2.0 issuer URL for token introspection |
+| `OKTA_DOMAIN` | — | Okta domain for OIDC userinfo validation |
 
 #### Observability
 
 | Variable | Default | Description |
 |----------|---------|-------------|
+| `OTEL_ENABLED` | `false` | Enable OpenTelemetry tracing |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4317` | OpenTelemetry collector endpoint |
 | `LANGFUSE_PUBLIC_KEY` | — | Langfuse tracing public key (optional) |
 | `LANGFUSE_SECRET_KEY` | — | Langfuse tracing secret key (optional) |
@@ -434,6 +509,8 @@ When running with `docker compose`, the AI platform container connects to servic
 | Qdrant | `qdrant` | `localhost:6333` |
 | Kafka | `kafka` | `localhost:9092` |
 | AI Platform | `ai-platform` | `localhost:8000` |
+| API Gateway | `gateway` | `localhost:8080` |
+| Frontend | `frontend` | `localhost:5173` |
 | Prometheus | `prometheus` | `localhost:9090` |
 | Grafana | `grafana` | `localhost:3000` |
 
@@ -487,6 +564,13 @@ Edit `.env` and set at minimum:
 ```env
 OPENAI_API_KEY=sk-your-key-here
 JWT_SECRET=a-long-random-secret-string
+KAFKA_ENABLED=false    # recommended for first local run without Kafka
+```
+
+For local Python development, also set:
+
+```powershell
+$env:PYTHONPATH = ".;ai-platform"
 ```
 
 ### Step 5 — Start Infrastructure
@@ -506,12 +590,17 @@ docker compose ps
 ### Step 6 — Verify the Platform
 
 ```powershell
-# Health check
+# Health check (liveness)
 curl http://localhost:8000/api/v1/health
 
-# Expected response:
+# Readiness (dependency status)
+curl http://localhost:8000/api/v1/ready
+
+# Expected health response:
 # {"status":"UP","service":"ai-platform"}
 ```
+
+The `/ready` endpoint reports Postgres, Redis, Qdrant, Kafka, Email, and CRM status.
 
 ---
 
@@ -530,9 +619,12 @@ docker compose down           # Stop all services
 | Service | URL |
 |---------|-----|
 | AI Platform API | http://localhost:8000 |
+| API Gateway | http://localhost:8080 |
+| Frontend (Docker) | http://localhost:5173 |
 | OpenAPI Docs | http://localhost:8000/docs |
 | ReDoc | http://localhost:8000/redoc |
 | Health Check | http://localhost:8000/api/v1/health |
+| Readiness Check | http://localhost:8000/api/v1/ready |
 | Prometheus | http://localhost:9090 |
 | Grafana | http://localhost:3000 |
 | Qdrant Dashboard | http://localhost:6333/dashboard |
@@ -547,9 +639,9 @@ docker compose up -d postgres redis qdrant zookeeper kafka prometheus grafana
 
 # Terminal 2 — AI platform with hot reload
 .\.venv\Scripts\activate
+$env:PYTHONPATH = ".;ai-platform"
+$env:KAFKA_ENABLED = "false"
 make run
-# Equivalent to:
-# uvicorn ai_platform.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 ### Option C — Run API Gateway Separately
@@ -601,23 +693,53 @@ OLLAMA_BASE_URL=http://localhost:11434
 
 ## 8. API Endpoints
 
-All AI platform routes are prefixed with `/api/v1/`.
+All AI platform routes are prefixed with `/api/v1/`. Protected routes require a JWT Bearer token.
+
+### Authentication
+
+Obtain a development token:
+
+```powershell
+curl -X POST http://localhost:8000/api/v1/auth/token `
+  -H "Content-Type: application/json" `
+  -d '{"subject": "CUST-001", "role": "distributor"}'
+```
+
+Use the returned `access_token` in subsequent requests:
+
+```
+Authorization: Bearer <access_token>
+```
+
+### Endpoints
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| `GET` | `/api/v1/health` | No | Service health status |
+| `GET` | `/api/v1/health` | No | Liveness — service is running |
+| `GET` | `/api/v1/ready` | No | Readiness — Postgres, Redis, Qdrant, Kafka, Email, CRM |
 | `GET` | `/api/v1/metrics` | No | Prometheus metrics |
-| `POST` | `/api/v1/conversation` | JWT | Send message to AI agent orchestrator |
-| `GET` | `/api/v1/orders` | JWT | List orders |
-| `GET` | `/api/v1/inventory` | JWT | Check inventory |
-| `GET` | `/api/v1/products` | JWT | List products |
-| `GET` | `/api/v1/customer` | JWT | Customer profile |
+| `POST` | `/api/v1/auth/token` | No | Issue development JWT |
+| `GET` | `/api/v1/auth/me` | JWT | Current user profile |
+| `POST` | `/api/v1/conversation` | JWT | Send message to AI orchestrator |
+| `POST` | `/api/v1/orders` | JWT | Create order (requires `Idempotency-Key` header) |
+| `GET` | `/api/v1/orders` | JWT | List orders (paginated) |
+| `GET` | `/api/v1/orders/{order_id}` | JWT | Get order by ID |
+| `POST` | `/api/v1/orders/{order_id}/cancel` | JWT | Cancel order |
+| `GET` | `/api/v1/products` | JWT | List products (paginated) |
+| `GET` | `/api/v1/inventory/{sku}` | JWT | Check inventory for SKU |
+| `GET` | `/api/v1/customers` | JWT | List customers (paginated) |
+| `GET` | `/api/v1/customers/{customer_id}` | JWT | Get customer profile |
 
 ### Example — Conversation Request
 
 ```powershell
+$token = (curl -s -X POST http://localhost:8000/api/v1/auth/token `
+  -H "Content-Type: application/json" `
+  -d '{"subject":"CUST-001","role":"distributor"}' | ConvertFrom-Json).access_token
+
 curl -X POST http://localhost:8000/api/v1/conversation `
   -H "Content-Type: application/json" `
+  -H "Authorization: Bearer $token" `
   -d '{
     "session_id": "sess-001",
     "customer_id": "CUST-001",
@@ -639,17 +761,23 @@ Response:
 
 ### Kafka Event Topics
 
-Defined in `infrastructure/kafka/topics.txt`:
+Defined in `infrastructure/kafka/topics.txt` and auto-created on startup:
 
 ```
-order.created          order.updated
+order.created          order.updated          order.cancelled
 inventory.checked      inventory.reserved
 promotion.applied      credit.checked
 payment.completed      shipment.created
 notification.sent
 ```
 
-Event schemas live in `shared/messaging/events/`.
+Create topics manually (e.g. in production):
+
+```bash
+sh infrastructure/kafka/create-topics.sh
+```
+
+Event schemas live in `shared/messaging/events/schemas.py`.
 
 ---
 
@@ -753,12 +881,16 @@ infrastructure/docker/Dockerfile.ai-platform
 
 - [ ] Set `APP_ENV=production`
 - [ ] Change `JWT_SECRET` to a cryptographically random value (64+ chars)
-- [ ] Set strong `POSTGRES_PASSWORD`
+- [ ] Set strong `POSTGRES_PASSWORD` and enable `POSTGRES_SSL`
 - [ ] Configure `OPENAI_API_KEY` or Azure OpenAI credentials
+- [ ] Set `CRM_PROVIDER=rest` and `CRM_BASE_URL` for live CRM integration
+- [ ] Configure SMTP (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD`)
+- [ ] Set `KAFKA_ENABLED=true` and verify topics via `create-topics.sh`
 - [ ] Enable TLS via `infrastructure/nginx/`
 - [ ] Deploy with `infrastructure/kubernetes/` or `infrastructure/helm/`
 - [ ] Provision cloud resources with `infrastructure/terraform/`
 - [ ] Configure alerting in `infrastructure/monitoring/`
+- [ ] Set `OTEL_ENABLED=true` for distributed tracing
 
 ---
 
@@ -768,8 +900,20 @@ infrastructure/docker/Dockerfile.ai-platform
 |------|-----|---------|
 | **Prometheus** | http://localhost:9090 | Metrics collection (scrapes `/api/v1/metrics`) |
 | **Grafana** | http://localhost:3000 | Dashboards and alerting |
-| **OpenTelemetry** | `localhost:4317` | Distributed traces |
+| **OpenTelemetry** | `localhost:4317` | Distributed traces (set `OTEL_ENABLED=true`) |
 | **Langfuse** | Cloud | LLM call tracing and cost tracking |
+
+### Custom AI Platform Metrics
+
+Exposed at `/api/v1/metrics` via `ai_platform/telemetry/metrics.py`:
+
+| Metric | Description |
+|--------|-------------|
+| `ai_platform_llm_requests_total` | LLM invocations by provider and success |
+| `ai_platform_llm_latency_seconds` | LLM call latency histogram |
+| `ai_platform_agent_invocations_total` | Agent runs by name |
+| `ai_platform_orchestrator_routes_total` | Supervisor routing decisions |
+| `ai_platform_rag_retrievals_total` | RAG retrievals (vector vs keyword) |
 
 Prometheus config: `infrastructure/monitoring/prometheus.yml`
 
@@ -826,6 +970,27 @@ docker compose ps          # Check status
 docker compose logs kafka  # Check specific service logs
 docker compose down -v     # Reset volumes (destroys data)
 docker compose up -d       # Restart
+```
+
+### API startup hangs or is slow
+
+Infrastructure clients use 5-second startup timeouts. If Redis/Kafka/Qdrant are unavailable, the API still starts in degraded mode.
+
+```powershell
+$env:KAFKA_ENABLED = "false"   # skip Kafka when not running
+```
+
+### Frontend proxy `ECONNREFUSED`
+
+The Vite dev server proxies to the API. Start the backend before the frontend:
+
+```powershell
+# Terminal 1
+$env:PYTHONPATH = ".;ai-platform"
+uvicorn ai_platform.main:app --port 8000
+
+# Terminal 2
+cd frontend && npm run dev
 ```
 
 ### Kafka connection refused on localhost
@@ -896,6 +1061,91 @@ See [Frontend Guide](frontend.md) for full details.
 
 ---
 
+## 16. Application Layer (CQRS)
+
+The application layer (`ai-platform/ai_platform/application/`) implements Clean Architecture business logic. API routes call **use cases only** — never repositories directly.
+
+### Structure
+
+```
+application/
+├── dto/           # Request/response DTOs (Order, Customer, Product, Inventory, Conversation)
+├── commands/      # Write operations (PlaceOrder, CancelOrder, ReserveInventory)
+├── queries/       # Read operations (GetOrder, ListOrders, GetCustomer, …)
+├── handlers/      # Command and query handlers (business logic + event publishing)
+└── use_cases/     # Thin wrappers exposed to the API layer
+```
+
+### Key flows
+
+| Operation | Use Case | Handler |
+|-----------|----------|---------|
+| Create order | `PlaceOrderUseCase` | `PlaceOrderHandler` — validates, reserves inventory, publishes `order.created` |
+| Cancel order | `CancelOrderUseCase` | `CancelOrderHandler` — releases inventory, publishes `order.cancelled` |
+| List products | `ListProductsUseCase` | `ListProductsHandler` |
+| Conversation | `ConversationUseCase` | `ConversationHandler` — prompt injection guard + orchestrator |
+| Get inventory | `GetInventoryUseCase` | `GetInventoryHandler` — publishes `inventory.checked` |
+
+---
+
+## 17. Infrastructure Clients
+
+Production adapters live in `ai-platform/ai_platform/infrastructure/`. All clients support **graceful degradation** when the backing service is unavailable.
+
+### Client reference
+
+| Module | File(s) | Capabilities |
+|--------|---------|--------------|
+| **Database** | `database.py` | asyncpg pool, transactions, health (version, pool size) |
+| **Redis** | `redis_client.py` | JSON cache, distributed locks, session TTL, latency health |
+| **Qdrant** | `qdrant_client.py` | Collection bootstrap, API key/HTTPS, health |
+| **Kafka** | `kafka/` | Topic auto-creation, producer, background consumer, health |
+| **Email** | `email/smtp_client.py` | Async SMTP, dev log mode, PII-masked logs |
+| **CRM** | `crm/` | Mock client (Postgres fallback), REST HTTP adapter |
+| **Repositories** | `repositories/` | Order, Customer, Product, Inventory — Postgres + in-memory fallback |
+
+### Startup sequence
+
+On application startup (`app/lifespan.py`):
+
+1. Postgres pool
+2. Redis client
+3. Qdrant client
+4. Kafka producer + topic creation + consumer
+5. RAG knowledge base bootstrap
+
+### Dependency injection
+
+Access clients via `ai_platform/config/dependencies.py`:
+
+```python
+from ai_platform.config.dependencies import (
+    get_order_repository,
+    get_crm,
+    get_email,
+)
+```
+
+Or import directly:
+
+```python
+from ai_platform.infrastructure import send_email, lookup_crm_account, cache_set_json
+```
+
+### Prompt templates
+
+Jinja2 templates live at repo root `prompts/` and are loaded by `ai_platform/prompts/loader.py`:
+
+| Template | Used by |
+|----------|---------|
+| `prompts/system/base.md` | All agents (included in templates) |
+| `prompts/templates/supervisor_agent.j2` | Supervisor routing (JSON output) |
+| `prompts/templates/knowledge_agent.j2` | Knowledge agent with RAG context |
+| `prompts/templates/domain_agent.j2` | Domain agents via `prompts/domain.py` |
+| `prompts/rag/context_injection.j2` | RAG citation formatting |
+
+---
+
 ## Quick Reference Card
 
 ```powershell
@@ -907,9 +1157,17 @@ docker compose up -d
 
 # Daily development
 .\.venv\Scripts\activate
-make run                              # Start API with hot reload
-cd frontend && npm run dev            # Start frontend
+$env:PYTHONPATH = ".;ai-platform"
+$env:KAFKA_ENABLED = "false"
+uvicorn ai_platform.main:app --port 8000 --reload
+cd frontend && npm run dev
+
+# Health checks
 curl http://localhost:8000/api/v1/health
+curl http://localhost:8000/api/v1/ready
+
+# Get JWT and call API
+curl -X POST http://localhost:8000/api/v1/auth/token -H "Content-Type: application/json" -d "{\"subject\":\"CUST-001\",\"role\":\"distributor\"}"
 
 # Before committing
 make lint && make typecheck && make test

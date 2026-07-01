@@ -14,7 +14,15 @@ from shared.messaging.events.schemas import (
     PromotionAppliedEvent,
     ShipmentCreatedEvent,
 )
-from shared.messaging.kafka_publisher import close_kafka_producer, get_buffered_events, init_kafka_producer, publish
+from shared.messaging.kafka_publisher import (
+    check_kafka_health,
+    close_kafka_producer,
+    get_buffered_count,
+    get_buffered_events,
+    init_kafka_producer,
+    publish,
+    start_kafka_consumer,
+)
 
 __all__ = [
     "ALL_TOPICS",
@@ -29,8 +37,11 @@ __all__ = [
     "PaymentCompletedEvent",
     "PromotionAppliedEvent",
     "ShipmentCreatedEvent",
+    "check_kafka_health",
     "close_kafka_producer",
+    "get_buffered_count",
     "get_buffered_events",
     "init_kafka_producer",
     "publish",
+    "start_kafka_consumer",
 ]

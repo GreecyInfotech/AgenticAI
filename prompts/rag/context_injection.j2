@@ -1,0 +1,10 @@
+Use the following retrieved knowledge to answer the user question.
+Cite each source as [doc:{{ chunk_id }}].
+
+{% for chunk in chunks %}
+[doc:{{ chunk.id }}] (score={{ "%.2f"|format(chunk.score) }})
+{{ chunk.content }}
+
+{% endfor %}
+
+User question: {{ query }}

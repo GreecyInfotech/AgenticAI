@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Header, Request
 from typing import Annotated
 
+from fastapi import APIRouter, Depends, Header, Request
+
 from ai_platform.application.dto.order_dto import CreateOrderRequestDTO, OrderResponseDTO
+from ai_platform.application.use_cases.cancel_order import CancelOrderUseCase
+from ai_platform.application.use_cases.get_order import GetOrderUseCase, ListOrdersUseCase
 from ai_platform.application.use_cases.place_order import PlaceOrderUseCase
-from ai_platform.config.dependencies import get_order_repository
 from shared.common.idempotency import idempotency_store
 from shared.common.pagination import PaginatedResponse, PaginationParams, decode_cursor, paginate
 from shared.security import CurrentUser, require_permission
@@ -43,15 +45,7 @@ async def get_order(
     order_id: str,
     _user: Annotated[CurrentUser, Depends(require_permission("orders:read"))],
 ) -> OrderResponseDTO:
-    repo = get_order_repository()
-    order = await repo.get_by_id(order_id)
-    return OrderResponseDTO(
-        order_id=order["order_id"],
-        customer_id=order["customer_id"],
-        status=order["status"],
-        total=float(order["total"]),
-        items=order["items"],
-    )
+    return await GetOrderUseCase().execute(order_id)
 
 
 @router.get("/orders", response_model=PaginatedResponse[OrderResponseDTO])
@@ -60,18 +54,20 @@ async def list_orders(
     user: Annotated[CurrentUser, Depends(require_permission("orders:read"))],
     customer_id: str | None = None,
 ) -> PaginatedResponse[OrderResponseDTO]:
-    repo = get_order_repository()
     offset = decode_cursor(params.cursor)
     filter_customer = customer_id if user.role == "admin" else user.subject
-    orders = await repo.list_orders(customer_id=filter_customer, limit=params.limit, offset=offset)
-    dtos = [
-        OrderResponseDTO(
-            order_id=o["order_id"],
-            customer_id=o["customer_id"],
-            status=o["status"],
-            total=float(o["total"]),
-            items=o["items"],
-        )
-        for o in orders
-    ]
-    return paginate(dtos, limit=params.limit, cursor=params.cursor)
+    orders = await ListOrdersUseCase().execute(
+        customer_id=filter_customer,
+        limit=params.limit,
+        offset=offset,
+    )
+    return paginate(orders, limit=params.limit, cursor=params.cursor)
+
+
+@router.post("/orders/{order_id}/cancel", response_model=OrderResponseDTO)
+async def cancel_order(
+    order_id: str,
+    user: Annotated[CurrentUser, Depends(require_permission("orders:write"))],
+    reason: str = "customer_requested",
+) -> OrderResponseDTO:
+    return await CancelOrderUseCase().execute(order_id, user.subject, reason=reason)

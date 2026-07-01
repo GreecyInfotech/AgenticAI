@@ -2,6 +2,7 @@
 
 order.created
 order.updated
+order.cancelled
 inventory.checked
 inventory.reserved
 promotion.applied

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from ai_platform.application.commands.place_order import OrderItemInput, PlaceOrderCommand, PlaceOrderHandler
+from ai_platform.application.commands.place_order import OrderItemInput, PlaceOrderCommand
 from ai_platform.application.dto.order_dto import OrderResponseDTO
+from ai_platform.application.handlers.place_order_handler import PlaceOrderHandler
 
 
 class PlaceOrderUseCase:
