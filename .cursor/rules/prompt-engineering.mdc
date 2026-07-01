@@ -1,0 +1,14 @@
+---
+description: Prompt engineering standards
+globs: ["ai-platform/prompts/**", "ai-platform/agents/**/prompt.py"]
+alwaysApply: true
+---
+
+# Prompt Engineering Rules
+
+- System prompts live in `prompts/system/`; domain prompts in `prompts/<domain>/`.
+- Use Jinja2 templates in `prompts/templates/` for variable substitution.
+- Few-shot examples in `prompts/few_shots/` — versioned per agent.
+- Never include PII or secrets in prompt templates.
+- RAG context injected via `prompts/rag/` templates with citation placeholders.
+- Keep prompts under 4000 tokens; summarize long context via `memory/summary_memory.py`.

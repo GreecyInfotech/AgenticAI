@@ -1,0 +1,11 @@
+FROM python:3.13-slim
+ARG SERVICE_DIR=services/order-service
+WORKDIR /app
+COPY shared ./shared
+COPY ${SERVICE_DIR} ./service
+ENV PYTHONPATH=/app
+RUN pip install --no-cache-dir fastapi uvicorn[standard] pydantic pydantic-settings structlog python-jose[cryptography] prometheus-client aiokafka httpx
+WORKDIR /app/service
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]

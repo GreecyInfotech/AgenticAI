@@ -1,0 +1,15 @@
+---
+description: Security requirements
+globs: ["**/*.py"]
+alwaysApply: true
+---
+
+# Security Rules
+
+- Validate every input with Pydantic models before processing.
+- Mask PII in logs (email, phone, credit card, SSN patterns).
+- Prevent prompt injection via `security/prompt_injection.py` guardrails.
+- Log audit events for order, payment, and credit operations.
+- Never expose secrets in code, logs, or API responses.
+- JWT tokens validated on every authenticated request.
+- Role-based access via `security/roles.py` and `security/permissions.py`.

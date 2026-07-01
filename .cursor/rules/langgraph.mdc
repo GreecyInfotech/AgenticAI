@@ -1,0 +1,15 @@
+---
+description: LangGraph orchestration rules
+globs: ["ai-platform/orchestrator/**", "ai-platform/agents/**", "ai-platform/workflows/**"]
+alwaysApply: true
+---
+
+# LangGraph Rules
+
+- Every multi-agent workflow uses LangGraph in `orchestrator/`.
+- Each agent returns typed state via Pydantic models in `agents/*/state.py`.
+- Never call another agent directly — only the supervisor routes via `orchestrator/router.py`.
+- Graph definition lives in `orchestrator/graph.py`; nodes in `nodes.py`, edges in `edges.py`.
+- Workflow state is immutable per node — return new state dict, do not mutate in place.
+- Emit events via `orchestrator/events.py` after significant state transitions.
+- Agent tools are registered in `agents/*/tools.py` and invoked through the tool layer.

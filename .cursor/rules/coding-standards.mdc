@@ -1,0 +1,14 @@
+---
+description: General coding standards
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Coding Standards
+
+- Follow existing naming conventions in the module you are editing.
+- Keep functions under 50 lines; extract helpers when logic grows.
+- No commented-out code in commits.
+- Docstrings on public modules and complex functions.
+- Import order: stdlib → third-party → local.
+- Constants in `shared/constants/` — no magic strings in business logic.

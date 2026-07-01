@@ -1,0 +1,15 @@
+---
+description: Testing standards
+globs: ["**/tests/**", "**/test_*.py", "**/tests.py"]
+alwaysApply: true
+---
+
+# Testing Rules
+
+- Unit tests in `tests/unit/` and per-module `tests.py`.
+- Integration tests mock external services (ERP, CRM, payment gateways).
+- Contract tests validate Kafka event schemas in `tests/contract/`.
+- Agent tests verify typed state transitions without calling real LLMs.
+- Use `pytest.mark.asyncio` for async tests.
+- Minimum coverage target: 80% for application and domain layers.
+- Load tests in `tests/load/`; security tests in `tests/security/`.

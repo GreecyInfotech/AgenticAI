@@ -1,0 +1,15 @@
+---
+description: API design guidelines
+globs: ["ai-platform/api/**", "gateway/**", "services/**/api/**"]
+alwaysApply: true
+---
+
+# API Guidelines
+
+- REST API with URL versioning: `/api/v1/...`
+- OpenAPI docs auto-generated via FastAPI at `/docs` and `/redoc`.
+- Use RFC 7807 Problem Details for error responses.
+- JWT authentication on all endpoints except `/health` and `/metrics`.
+- Idempotency-Key header required on POST mutations (orders, payments).
+- Pagination via `limit` and `cursor` query parameters.
+- All DTOs in `application/dto/` — never expose domain entities directly.

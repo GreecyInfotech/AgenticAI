@@ -1,0 +1,16 @@
+---
+description: Python coding standards
+globs: ["**/*.py"]
+alwaysApply: true
+---
+
+# Python Standards
+
+- Python 3.13 minimum.
+- Type hints mandatory on all public functions, methods, and class attributes.
+- Use Pydantic v2 models for all API request/response and agent state schemas.
+- Async FastAPI endpoints; use `async def` for I/O-bound operations.
+- Format with `black`, lint with `ruff`, type-check with `mypy`.
+- Tests with `pytest` and `pytest-asyncio`.
+- Prefer `structlog` over `print` for logging.
+- Use `from __future__ import annotations` in modules with forward references.

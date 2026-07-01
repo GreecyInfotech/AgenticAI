@@ -1,0 +1,6 @@
+from __future__ import annotations
+
+from ai_platform.orchestrator.workflow import run_ordering_workflow
+
+async def shipment_tracking(session_id: str, customer_id: str, order_id: str) -> dict:
+    return await run_ordering_workflow(session_id, customer_id, f"track shipment {order_id}")

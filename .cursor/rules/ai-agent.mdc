@@ -1,0 +1,14 @@
+---
+description: AI agent development rules
+globs: ["ai-platform/agents/**"]
+alwaysApply: true
+---
+
+# AI Agent Rules
+
+- Each agent lives in `agents/<name>_agent/` with: agent.py, prompt.py, schemas.py, tools.py, state.py, memory.py, tests.py.
+- Agents are stateless executors — session state lives in `memory/`.
+- Prompts are loaded from `prompts/` templates, never hardcoded in agent.py.
+- Tool calls go through `tools/` layer — agents do not call external APIs directly.
+- Agent responses must be Pydantic-validated before returning to orchestrator.
+- Include confidence score and reasoning summary in agent output schemas.

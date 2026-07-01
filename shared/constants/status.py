@@ -1,0 +1,15 @@
+from __future__ import annotations
+
+ORDER_STATUS_CREATED = "created"
+ORDER_STATUS_CONFIRMED = "confirmed"
+ORDER_STATUS_CANCELLED = "cancelled"
+ORDER_STATUS_SHIPPED = "shipped"
+ORDER_STATUS_DELIVERED = "delivered"
+
+PAYMENT_STATUS_PENDING = "pending"
+PAYMENT_STATUS_COMPLETED = "completed"
+PAYMENT_STATUS_FAILED = "failed"
+
+INVENTORY_STATUS_AVAILABLE = "available"
+INVENTORY_STATUS_RESERVED = "reserved"
+INVENTORY_STATUS_OUT_OF_STOCK = "out_of_stock"

@@ -1,0 +1,11 @@
+# Kafka topics for distributor ordering platform
+
+order.created
+order.updated
+inventory.checked
+inventory.reserved
+promotion.applied
+credit.checked
+payment.completed
+shipment.created
+notification.sent

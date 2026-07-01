@@ -1,0 +1,16 @@
+---
+description: Clean Architecture rules for the distributor ordering platform
+globs: ["**/*.py"]
+alwaysApply: true
+---
+
+# Architecture Rules
+
+- Always follow Clean Architecture: presentation → application → domain → infrastructure.
+- Never call infrastructure from presentation or API handlers directly.
+- Use dependency injection via FastAPI `Depends()` and factory functions in `config/`.
+- Business logic belongs in `application/use_cases/` — not in agents, API routes, or repositories.
+- Repositories are interfaces in `domain/`; implementations live in `infrastructure/repositories/`.
+- Domain entities must not import FastAPI, LangGraph, or database drivers.
+- Events are published from application handlers, not from domain entities directly.
+- Each microservice under `services/` is independently deployable with its own `pyproject.toml`.
