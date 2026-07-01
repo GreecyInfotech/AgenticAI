@@ -1,0 +1,27 @@
+@startuml 01-system-context
+!theme plain
+title System Context — AI Distributor Ordering Platform
+
+actor "Distributor User" as Distributor
+actor "Sales Rep" as SalesRep
+actor "Platform Admin" as Admin
+
+rectangle "AI Distributor Ordering Platform" as Platform {
+  component "Ordering System" as System
+}
+
+cloud "External" {
+  component "LLM Providers\n(OpenAI / Ollama / Azure)" as LLM
+  component "CRM API" as CRM
+  component "SMTP Email" as SMTP
+  component "ERP / SAP" as ERP
+}
+
+Distributor --> System : place orders,\nchat with AI
+SalesRep --> System : manage accounts
+Admin --> System : configure platform
+System --> LLM : chat completions,\nembeddings
+System --> CRM : account lookup
+System --> SMTP : notifications
+System --> ERP : inventory sync
+@enduml

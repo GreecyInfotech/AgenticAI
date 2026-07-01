@@ -1,0 +1,31 @@
+@startuml 12-deployment
+!theme plain
+title Deployment — Docker Compose Topology
+
+node "Host" {
+  node "docker-compose" {
+    artifact "frontend\n:5173" as FE
+    artifact "gateway\n:8080" as GW
+    artifact "ai-platform\n:8000" as AI
+    artifact "postgres\n:5432" as PG
+    artifact "redis\n:6379" as RD
+    artifact "qdrant\n:6333" as QD
+    artifact "zookeeper\n:2181" as ZK
+    artifact "kafka\n:9092" as KF
+    artifact "prometheus\n:9090" as PROM
+    artifact "grafana\n:3000" as GRAF
+    artifact "microservices\n:8001-8009" as SVC
+  }
+}
+
+FE --> GW : HTTP
+GW --> AI : reverse proxy
+GW --> SVC
+AI --> PG
+AI --> RD
+AI --> QD
+AI --> KF
+SVC --> KF
+PROM --> AI : scrape /metrics
+GRAF --> PROM
+@enduml

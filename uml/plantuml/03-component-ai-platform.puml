@@ -1,0 +1,69 @@
+@startuml 03-component-ai-platform
+!theme plain
+title Component Diagram — AI Platform
+
+package "Presentation" {
+  [api/v1] as API
+  [middleware] as MW
+}
+
+package "Application" {
+  [Use Cases] as UC
+  [Handlers] as H
+  [Commands / Queries] as CQ
+  [DTOs] as DTO
+}
+
+package "Orchestrator" {
+  [LangGraph] as GRAPH
+  [Supervisor Node] as SUP
+  [Domain Node] as DOM
+  [Router] as ROUTE
+}
+
+package "Agents" {
+  [14 Specialist Agents] as AGENTS
+}
+
+package "LLM & RAG" {
+  [InstrumentedLLM] as LLM
+  [HybridRetriever] as RAG
+  [Prompt Loader] as PROMPTS
+}
+
+package "Infrastructure" {
+  [Repositories] as REPO
+  [database] as DB
+  [redis_client] as REDIS
+  [qdrant_client] as QDRANT
+  [kafka] as KAFKA
+  [email] as EMAIL
+  [crm] as CRM
+}
+
+package "Shared" {
+  [security] as SEC
+  [messaging] as MSG
+}
+
+API --> UC
+API --> SEC
+UC --> H
+H --> CQ
+H --> DTO
+H --> REPO
+API --> GRAPH
+GRAPH --> SUP
+GRAPH --> DOM
+SUP --> AGENTS
+DOM --> AGENTS
+AGENTS --> LLM
+AGENTS --> PROMPTS
+DOM --> RAG
+H --> MSG
+REPO --> DB
+REPO --> REDIS
+DOM --> REDIS
+RAG --> QDRANT
+H --> KAFKA
+@enduml

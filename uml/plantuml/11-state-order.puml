@@ -1,0 +1,23 @@
+@startuml 11-state-order
+!theme plain
+title State Machine — Order Lifecycle
+
+[*] --> created : PlaceOrderHandler
+
+created --> confirmed : payment / credit check
+created --> cancelled : CancelOrderHandler
+
+confirmed --> shipped : shipment_service
+shipped --> delivered : delivery confirmed
+
+cancelled --> [*]
+delivered --> [*]
+
+note right of created
+  ORDER_STATUS_CREATED
+end note
+note right of cancelled
+  ORDER_STATUS_CANCELLED
+  inventory released
+end note
+@enduml

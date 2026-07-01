@@ -1,0 +1,59 @@
+@startuml 05-class-infrastructure
+!theme plain
+title Class Diagram — Infrastructure Clients
+
+interface CrmClient {
+  +get_account(customer_id): CrmAccount
+  +update_account(customer_id, data): CrmAccount
+  +search_accounts(query): list
+}
+
+class MockCrmClient {
+  provider_name: str = "mock"
+}
+class RestCrmClient {
+  provider_name: str = "rest"
+}
+class CrmAccount {
+  customer_id: str
+  name: str
+  tier: str
+  account_manager: str
+  credit_limit: float
+}
+
+interface EmailClient {
+  +send(to, subject, body): dict
+}
+class SmtpEmailClient
+
+class OrderRepository {
+  +create()
+  +get_by_id()
+  +list_orders()
+  +cancel()
+}
+class InventoryRepository {
+  +get_by_sku()
+  +reserve()
+  +release()
+}
+class CustomerRepository {
+  +get_by_id()
+  +list_customers()
+}
+class ProductRepository {
+  +list_products()
+  +get_by_sku()
+}
+
+CrmClient <|.. MockCrmClient
+CrmClient <|.. RestCrmClient
+MockCrmClient --> CrmAccount
+RestCrmClient --> CrmAccount
+EmailClient <|.. SmtpEmailClient
+
+note bottom of OrderRepository
+  Postgres + in-memory fallback
+end note
+@enduml

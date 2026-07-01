@@ -2,7 +2,8 @@
 
 Single-agent AI platform for distributor ordering with **LangGraph** orchestration, **14 specialist agents**, **RAG**, event-driven microservices, and a **React web frontend**.
 
-> **Documentation:** See [docs/README.md](docs/README.md) for the complete documentation index.
+> **Documentation:** See [docs/README.md](docs/README.md) for the complete documentation index.  
+> **UML Diagrams:** See [UML.md](UML.md) for end-to-end architecture, sequence, class, and deployment diagrams.
 
 ## Architecture
 

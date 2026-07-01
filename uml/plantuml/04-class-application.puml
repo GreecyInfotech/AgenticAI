@@ -1,0 +1,89 @@
+@startuml 04-class-application
+!theme plain
+title Class Diagram — Application Layer (CQRS)
+
+package "use_cases" {
+  class PlaceOrderUseCase {
+    +execute(customer_id, items): OrderResponseDTO
+  }
+  class CancelOrderUseCase {
+    +execute(order_id, customer_id, reason): OrderResponseDTO
+  }
+  class GetOrderUseCase {
+    +execute(order_id): OrderResponseDTO
+  }
+  class ListOrdersUseCase {
+    +execute(customer_id, limit, offset): list
+  }
+  class ConversationUseCase {
+    +execute(request): ConversationResponseDTO
+  }
+  class GetInventoryUseCase {
+    +execute(sku): InventoryResponseDTO
+  }
+}
+
+package "handlers" {
+  class PlaceOrderHandler {
+    +handle(command): OrderResponseDTO
+  }
+  class CancelOrderHandler {
+    +handle(command): OrderResponseDTO
+  }
+  class GetOrderHandler {
+    +handle(query): OrderResponseDTO
+  }
+  class ConversationHandler {
+    +handle(request): ConversationResponseDTO
+  }
+}
+
+package "commands" {
+  class PlaceOrderCommand {
+    customer_id: str
+    items: list
+  }
+  class CancelOrderCommand {
+    order_id: str
+    customer_id: str
+    reason: str
+  }
+}
+
+package "queries" {
+  class GetOrderQuery {
+    order_id: str
+  }
+  class ListOrdersQuery {
+    customer_id: str
+    limit: int
+    offset: int
+  }
+}
+
+package "dto" {
+  class OrderResponseDTO {
+    order_id: str
+    customer_id: str
+    status: str
+    total: float
+    items: list
+  }
+  class ConversationResponseDTO {
+    session_id: str
+    reply: str
+    target_agent: str
+    requires_escalation: bool
+  }
+}
+
+PlaceOrderUseCase --> PlaceOrderHandler
+CancelOrderUseCase --> CancelOrderHandler
+GetOrderUseCase --> GetOrderHandler
+ConversationUseCase --> ConversationHandler
+PlaceOrderHandler --> PlaceOrderCommand
+CancelOrderHandler --> CancelOrderCommand
+GetOrderHandler --> GetOrderQuery
+PlaceOrderHandler --> OrderResponseDTO
+ConversationHandler --> ConversationResponseDTO
+@enduml

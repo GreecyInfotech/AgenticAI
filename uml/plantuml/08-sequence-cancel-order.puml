@@ -1,0 +1,26 @@
+@startuml 08-sequence-cancel-order
+!theme plain
+title Sequence — Cancel Order
+
+actor User
+participant "API\n/orders/{id}/cancel" as API
+participant "CancelOrderUseCase" as UC
+participant "CancelOrderHandler" as H
+participant "OrderRepository" as ORD
+participant "InventoryRepository" as INV
+queue "Kafka" as KF
+
+User -> API : POST cancel + JWT
+API -> UC : execute(order_id, customer_id)
+UC -> H : handle(CancelOrderCommand)
+H -> ORD : get_by_id(order_id)
+H -> ORD : cancel(order_id, reason)
+
+loop each line item
+  H -> INV : release(sku, qty)
+end
+
+H -> KF : publish(order.cancelled)
+H --> API : OrderResponseDTO
+API --> User : 200 OK
+@enduml

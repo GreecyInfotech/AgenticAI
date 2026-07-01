@@ -1,0 +1,41 @@
+@startuml 07-sequence-place-order
+!theme plain
+title Sequence — Place Order End-to-End
+
+actor User
+participant "Frontend" as FE
+participant "Gateway" as GW
+participant "API\n/orders" as API
+participant "IdempotencyStore" as IDEM
+participant "PlaceOrderUseCase" as UC
+participant "PlaceOrderHandler" as H
+participant "ProductRepository" as PROD
+participant "InventoryRepository" as INV
+participant "OrderRepository" as ORD
+queue "Kafka" as KF
+
+User -> FE : place order
+FE -> GW : POST /orders + JWT + Idempotency-Key
+GW -> API : proxy
+
+API -> IDEM : check key
+alt cached
+  IDEM --> API : cached response
+end
+
+API -> UC : execute(customer_id, items)
+UC -> H : handle(PlaceOrderCommand)
+
+loop each line item
+  H -> PROD : get_by_sku(sku)
+  H -> INV : reserve(sku, qty)
+end
+
+H -> ORD : create(customer_id, items, total)
+H -> KF : publish(order.created)
+H --> UC : OrderResponseDTO
+UC --> API : result
+API -> IDEM : complete(key)
+API --> FE : 201 Created
+FE --> User : confirmation
+@enduml

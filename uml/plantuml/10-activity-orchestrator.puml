@@ -1,0 +1,29 @@
+@startuml 10-activity-orchestrator
+!theme plain
+title Activity — LangGraph Orchestrator Flow
+
+start
+:Receive user message;
+:Load session memory\n(Redis / in-memory);
+:Load conversation summary\n(Postgres if threshold exceeded);
+
+:Supervisor Node;
+:SupervisorAgent + LLM;
+:Parse JSON routing\nor keyword fallback;
+
+if (target_agent set?) then (yes)
+  if (knowledge_agent?) then (yes)
+    :HybridRetriever\n(Qdrant + keyword);
+    :Inject RAG context into prompt;
+  endif
+  :Domain Node;
+  :Run specialist agent + LLM;
+  :Save user + assistant messages;
+  :Emit conversation.completed event;
+  :Return reply + agent_results;
+else (no)
+  :End without domain agent;
+endif
+
+stop
+@enduml

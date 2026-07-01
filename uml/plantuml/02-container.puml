@@ -1,0 +1,48 @@
+@startuml 02-container
+!theme plain
+title Container Diagram — AI Distributor Ordering Platform
+
+package "Clients" {
+  [Frontend\nReact + Vite :5173] as FE
+}
+
+package "Edge" {
+  [API Gateway\n:8080] as GW
+}
+
+package "Core" {
+  [AI Platform\nFastAPI + LangGraph :8000] as AI
+}
+
+package "Microservices" {
+  [order-service :8001] as OS
+  [inventory-service :8002] as IS
+  [customer-service :8003] as CS
+  [pricing-service :8004] as PS
+  [payment-service :8005] as PAY
+  [shipment-service :8006] as SH
+  [promotion-service :8007] as PR
+  [notification-service :8008] as NS
+  [analytics-service :8009] as AN
+}
+
+database "PostgreSQL" as PG
+database "Redis" as RD
+database "Qdrant" as QD
+queue "Kafka" as KF
+node "Prometheus :9090" as PROM
+node "Grafana :3000" as GRAF
+
+FE --> GW : HTTPS
+GW --> AI : proxy
+GW --> OS
+GW --> IS
+GW --> CS
+AI --> PG
+AI --> RD
+AI --> QD
+AI --> KF
+OS --> KF
+IS --> KF
+AI --> PROM
+@enduml

@@ -1,0 +1,22 @@
+@startuml 09-sequence-startup
+!theme plain
+title Sequence — Platform Startup (Lifespan)
+
+participant "FastAPI Lifespan" as APP
+database "PostgreSQL" as PG
+database "Redis" as RD
+database "Qdrant" as QD
+queue "Kafka" as KF
+participant "Topic Admin" as TOP
+participant "Kafka Consumer" as CON
+participant "RAG Bootstrap" as RAG
+
+APP -> PG : init_db_pool() [5s timeout]
+APP -> RD : init_redis() [5s timeout]
+APP -> QD : init_qdrant() [5s timeout]
+APP -> KF : init_kafka_producer() [5s timeout]
+APP -> TOP : ensure_topics()
+APP -> CON : start_kafka_consumer()
+APP -> RAG : bootstrap_knowledge_base()
+note over APP : app.state.ready = true
+@enduml

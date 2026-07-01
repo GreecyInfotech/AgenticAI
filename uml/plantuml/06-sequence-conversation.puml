@@ -1,0 +1,49 @@
+@startuml 06-sequence-conversation
+!theme plain
+title Sequence — Conversation End-to-End
+
+actor User
+participant "Frontend" as FE
+participant "Gateway" as GW
+participant "API\n/conversation" as API
+participant "ConversationUseCase" as UC
+participant "ConversationHandler" as H
+participant "WorkflowExecutor" as WF
+participant "LangGraph" as G
+participant "SessionMemory" as MEM
+participant "SupervisorAgent" as SUP
+participant "HybridRetriever" as RAG
+participant "Domain Agent" as AG
+participant "InstrumentedLLM" as LLM
+queue "Kafka" as KF
+
+User -> FE : type message
+FE -> GW : POST /api/v1/conversation + JWT
+GW -> API : proxy
+API -> UC : execute(request)
+UC -> H : handle()
+H -> WF : run_ordering_workflow()
+WF -> G : ainvoke(state)
+
+G -> MEM : load history / summary
+G -> SUP : supervisor_node
+SUP -> LLM : ainvoke(supervisor prompt)
+LLM --> SUP : JSON target_agent
+SUP -> KF : conversation.routed
+
+alt knowledge_agent
+  G -> RAG : retrieve(query)
+  RAG --> G : chunks
+end
+
+G -> AG : domain_node
+AG -> LLM : ainvoke(domain prompt)
+LLM --> AG : reply
+G -> MEM : save messages
+G -> KF : conversation.completed
+G --> H : final state
+H --> UC : ConversationResponseDTO
+UC --> API : response
+API --> FE : JSON
+FE --> User : display reply
+@enduml
