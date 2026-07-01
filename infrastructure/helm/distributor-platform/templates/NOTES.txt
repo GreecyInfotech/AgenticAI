@@ -1,0 +1,23 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Release: {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+Environment: {{ .Values.global.environment }}
+
+{{- if .Values.ingress.enabled }}
+
+Ingress:
+{{- range .Values.ingress.hosts }}
+  https://{{ .host }}
+{{- end }}
+{{- else }}
+
+Port-forward commands:
+  kubectl port-forward svc/{{ include "distributor-platform.fullname" . }}-frontend 5173:{{ .Values.frontend.service.port }} -n {{ .Release.Namespace }}
+  kubectl port-forward svc/{{ include "distributor-platform.fullname" . }}-gateway 8080:{{ .Values.gateway.service.port }} -n {{ .Release.Namespace }}
+  kubectl port-forward svc/{{ include "distributor-platform.fullname" . }}-ai-platform 8000:{{ .Values.aiPlatform.service.port }} -n {{ .Release.Namespace }}
+{{- end }}
+
+Health checks:
+  AI Platform: /api/v1/health and /api/v1/ready
+  Gateway: /health and /ready

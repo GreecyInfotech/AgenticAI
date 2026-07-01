@@ -1,0 +1,60 @@
+global:
+  imageRegistry: localhost:5000
+  environment: development
+
+ingress:
+  enabled: false
+
+aiPlatform:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  env:
+    APP_ENV: development
+    LOG_LEVEL: DEBUG
+    KAFKA_ENABLED: "true"
+    OTEL_ENABLED: "false"
+
+gateway:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+
+frontend:
+  replicaCount: 1
+
+microservices:
+  - name: order-service
+    port: 8080
+    replicas: 1
+    kafka: true
+  - name: inventory-service
+    port: 8080
+    replicas: 1
+    kafka: true
+  - name: customer-service
+    port: 8080
+    replicas: 1
+    kafka: false
+
+externalServices:
+  postgres:
+    host: postgres
+  redis:
+    host: redis
+  qdrant:
+    host: ""
+  kafka:
+    bootstrapServers: kafka:9092
+
+qdrant:
+  enabled: true
+  replicaCount: 1
+  persistence:
+    size: 5Gi
+
+monitoring:
+  prometheus:
+    enabled: true
+  grafana:
+    enabled: true

@@ -1,4 +1,4 @@
-.PHONY: install lint format typecheck test run docker-up docker-down
+.PHONY: install lint format typecheck test run docker-up docker-down docker-prod helm-lint helm-deploy terraform-plan-dev
 
 install:
 	pip install -e ".[dev]"
@@ -25,3 +25,20 @@ docker-up:
 
 docker-down:
 	docker compose down
+
+docker-prod:
+	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+docker-build:
+	docker build -f infrastructure/docker/Dockerfile.ai-platform -t ai-platform:latest .
+	docker build -f infrastructure/docker/Dockerfile.gateway -t gateway:latest .
+	docker build -f infrastructure/docker/Dockerfile.frontend -t frontend:latest .
+
+helm-lint:
+	helm lint infrastructure/helm/distributor-platform -f infrastructure/helm/distributor-platform/values-dev.yaml
+
+helm-deploy:
+	helm upgrade --install distributor-platform infrastructure/helm/distributor-platform -f infrastructure/helm/distributor-platform/values-dev.yaml --namespace distributor --create-namespace
+
+terraform-plan-dev:
+	cd infrastructure/terraform/environments/dev && terraform init -backend=false && terraform plan

@@ -129,7 +129,8 @@ make run       # uvicorn dev server
 | [Frontend Guide](docs/frontend.md) | React web app |
 | [REST API](docs/api/rest-api.md) | API reference |
 | [Architecture](docs/architecture/overview.md) | System design |
-| [Deployment](docs/deployment/docker.md) | Docker Compose guide |
+| [Deployment (Docker)](docs/deployment/docker.md) | Docker Compose guide |
+| [Deployment (Production)](docs/deployment/production.md) | Docker, Terraform, Helm |
 | [Runbooks](docs/runbooks/incident-response.md) | Operations |
 
 ## Cursor Rules

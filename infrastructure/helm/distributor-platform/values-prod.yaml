@@ -1,0 +1,72 @@
+global:
+  environment: production
+
+ingress:
+  enabled: true
+  hosts:
+    - host: distributor.production.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+        - path: /api
+          pathType: Prefix
+          service: gateway
+  tls:
+    - secretName: distributor-prod-tls
+      hosts:
+        - distributor.production.example.com
+
+aiPlatform:
+  replicaCount: 3
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 20
+  env:
+    APP_ENV: production
+    LOG_LEVEL: INFO
+    OTEL_ENABLED: "true"
+
+gateway:
+  replicaCount: 3
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 12
+
+frontend:
+  replicaCount: 2
+
+secrets:
+  create: false  # use external-secrets or Key Vault in prod
+
+qdrant:
+  enabled: true
+  replicaCount: 2
+  persistence:
+    size: 50Gi
+    storageClass: managed-premium
+
+externalServices:
+  qdrant:
+    host: ""
+
+monitoring:
+  prometheus:
+    enabled: true
+  grafana:
+    enabled: true
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - distributor-platform
+          topologyKey: kubernetes.io/hostname

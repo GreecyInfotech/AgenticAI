@@ -1,0 +1,77 @@
+{{- range .Values.microservices }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "distributor-platform.fullname" $ }}-{{ .name }}
+  labels:
+    {{- include "distributor-platform.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ .name }}
+spec:
+  replicas: {{ .replicas }}
+  selector:
+    matchLabels:
+      {{- include "distributor-platform.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: {{ .name }}
+  template:
+    metadata:
+      labels:
+        {{- include "distributor-platform.selectorLabels" $ | nindent 8 }}
+        app.kubernetes.io/component: {{ .name }}
+    spec:
+      serviceAccountName: {{ include "distributor-platform.serviceAccountName" $ }}
+      securityContext:
+        {{- toYaml $.Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .name }}
+          image: "{{ $.Values.global.imageRegistry }}/{{ $.Values.microserviceDefaults.image.repository }}-{{ .name }}:{{ $.Values.microserviceDefaults.image.tag }}"
+          imagePullPolicy: {{ $.Values.microserviceDefaults.image.pullPolicy }}
+          securityContext:
+            {{- toYaml $.Values.securityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: {{ .port }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "distributor-platform.fullname" $ }}-config
+          env:
+            - name: KAFKA_ENABLED
+              value: {{ ternary "true" "false" .kafka | quote }}
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.externalServices.postgres.existingSecret | default (printf "%s-secrets" (include "distributor-platform.fullname" $)) }}
+                  key: jwt-secret
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            {{- toYaml $.Values.microserviceDefaults.resources | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "distributor-platform.fullname" $ }}-{{ .name }}
+  labels:
+    {{- include "distributor-platform.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ .name }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "distributor-platform.selectorLabels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ .name }}
+{{- end }}

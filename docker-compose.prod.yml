@@ -1,0 +1,87 @@
+# Production Docker Compose overlay
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  ai-platform:
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    environment:
+      APP_ENV: production
+      LOG_LEVEL: INFO
+      KAFKA_ENABLED: "true"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  gateway:
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    restart: unless-stopped
+
+  postgres:
+    restart: unless-stopped
+    environment:
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+
+  redis:
+    restart: unless-stopped
+
+  kafka:
+    restart: unless-stopped
+
+  qdrant:
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  order-service:
+    restart: unless-stopped
+  inventory-service:
+    restart: unless-stopped
+  customer-service:
+    restart: unless-stopped
+  pricing-service:
+    restart: unless-stopped
+  payment-service:
+    restart: unless-stopped
+  shipment-service:
+    restart: unless-stopped
+  promotion-service:
+    restart: unless-stopped
+  notification-service:
+    restart: unless-stopped
+  analytics-service:
+    restart: unless-stopped
+
+  prometheus:
+    restart: unless-stopped
+
+  grafana:
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-changeme}
+      GF_USERS_ALLOW_SIGN_UP: "false"

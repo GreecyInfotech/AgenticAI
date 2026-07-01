@@ -1,0 +1,14 @@
+apiVersion: v2
+name: distributor-platform
+description: Helm chart for AI Distributor Ordering Platform
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - ai
+  - distributor
+  - langgraph
+  - fastapi
+maintainers:
+  - name: GreecyInfotech
+    email: dev@greecyinfotech.com

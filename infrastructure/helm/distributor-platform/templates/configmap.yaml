@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "distributor-platform.fullname" . }}-config
+  labels:
+    {{- include "distributor-platform.labels" . | nindent 4 }}
+data:
+  APP_ENV: {{ .Values.global.environment | quote }}
+  POSTGRES_HOST: {{ .Values.externalServices.postgres.host | quote }}
+  POSTGRES_PORT: {{ .Values.externalServices.postgres.port | quote }}
+  POSTGRES_DB: {{ .Values.externalServices.postgres.database | quote }}
+  POSTGRES_USER: {{ .Values.externalServices.postgres.user | quote }}
+  REDIS_HOST: {{ .Values.externalServices.redis.host | quote }}
+  REDIS_PORT: {{ .Values.externalServices.redis.port | quote }}
+  {{- $qdrantHost := .Values.externalServices.qdrant.host }}
+  {{- if and .Values.qdrant.enabled (not $qdrantHost) }}
+  {{- $qdrantHost = printf "%s-qdrant" (include "distributor-platform.fullname" .) }}
+  {{- end }}
+  QDRANT_HOST: {{ $qdrantHost | quote }}
+  QDRANT_PORT: {{ .Values.externalServices.qdrant.port | quote }}
+  QDRANT_COLLECTION: {{ .Values.externalServices.qdrant.collection | quote }}
+  KAFKA_BOOTSTRAP_SERVERS: {{ .Values.externalServices.kafka.bootstrapServers | quote }}
+  AI_PLATFORM_URL: http://{{ include "distributor-platform.fullname" . }}-ai-platform:{{ .Values.aiPlatform.service.port }}
+  ORDER_SERVICE_URL: http://{{ include "distributor-platform.fullname" . }}-order-service:8080
+  INVENTORY_SERVICE_URL: http://{{ include "distributor-platform.fullname" . }}-inventory-service:8080
+  CUSTOMER_SERVICE_URL: http://{{ include "distributor-platform.fullname" . }}-customer-service:8080

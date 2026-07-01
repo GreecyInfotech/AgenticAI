@@ -1,11 +1,30 @@
+# syntax=docker/dockerfile:1
+
 FROM python:3.13-slim
-ARG SERVICE_DIR=services/order-service
+
+ARG SERVICE_NAME=order-service
+ARG SERVICE_DIR=services/${SERVICE_NAME}
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app
+
+RUN groupadd --gid 10001 app && useradd --uid 10001 --gid app --create-home app
+
 WORKDIR /app
 COPY shared ./shared
 COPY ${SERVICE_DIR} ./service
-ENV PYTHONPATH=/app
-RUN pip install --no-cache-dir fastapi uvicorn[standard] pydantic pydantic-settings structlog python-jose[cryptography] prometheus-client aiokafka httpx
+
+RUN pip install --no-cache-dir \
+    fastapi uvicorn[standard] pydantic pydantic-settings \
+    structlog python-jose[cryptography] prometheus-client aiokafka httpx && \
+    chown -R app:app /app
+
 WORKDIR /app/service
+USER app
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')"
+
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
